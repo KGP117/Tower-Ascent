@@ -17,18 +17,14 @@ public class Projectile {
             case "Player":
                 speed=10;
             whom= 1;
-            
-            case "Ground":
-                speed=15;
-            whom=2;
 
             case "Sky":
                 speed=5;
-            whom=3;
+            whom=2;
 
             case "Boss":
                 speed=20;
-            whom=4;
+            whom=3;
         }
         return whom;
     }
@@ -59,10 +55,7 @@ public class Projectile {
                 break;     
 
             case 6: // enemy
-                break;
-            
-            case 7: //coin
-                break;    
+                break;  
 
 
         }
