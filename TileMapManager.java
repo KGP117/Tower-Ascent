@@ -50,7 +50,9 @@ public class TileMapManager {
         // read every line in the text file into the list
 
         BufferedReader reader = new BufferedReader(
-            new FileReader(filename));
+        
+        new FileReader(filename));
+
         while (true) {
             String line = reader.readLine();
             // no more lines to read

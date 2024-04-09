@@ -5,11 +5,7 @@ import java.awt.event.*;
 import java.awt.image.BufferStrategy;	// need this to implement page flipping
 
 
-public class Screen extends JFrame implements
-				Runnable,
-				KeyListener,
-				MouseListener,
-				MouseMotionListener
+public class GameWindow extends JFrame implements Runnable, KeyListener, MouseListener, MouseMotionListener
 {
   	private static final int NUM_BUFFERS = 2;	// used for page flipping
 
@@ -18,9 +14,16 @@ public class Screen extends JFrame implements
 	private Thread gameThread = null;            	// the thread that controls the game
 	private volatile boolean isRunning = false;    	// used to stop the game thread
 
-	private ImageEffect imageEffect;		// sprite demonstrating an image effect
+	//private BirdAnimation animation = null;		// animation sprite
+	//private ImageEffect imageEffect;		// sprite demonstrating an image effect
 
 	private BufferedImage image;			// drawing area for each frame
+
+	private Image resume1Image;			// first image for resume button
+	private Image resume2Image;			// second image for resume button
+
+	private Image restart1Image;		// first image for restart button
+	private Image restart2Image;		// second image for restart button
 
 	private Image quit1Image;			// first image for quit button
 	private Image quit2Image;			// second image for quit button
@@ -50,18 +53,25 @@ public class Screen extends JFrame implements
 	private Graphics gScr;
 	private BufferStrategy bufferStrategy;
 
-	private SoundManager soundManager;
+	//private SoundManager soundManager;
 	TileMapManager tileManager;
 	TileMap	tileMap;
 
-	public Screen() {
+	public GameWindow() {
  
 		super("Tower Ascent");
 
 		initFullScreen();
 
+		resume1Image = ImageManager.loadImage("images/Pause1.png");
+		resume2Image = ImageManager.loadImage("images/Pause2.png");
+
+		restart1Image = ImageManager.loadImage("images/Restart1.png");
+		restart2Image = ImageManager.loadImage("images/Restart2.png");
+
 		quit1Image = ImageManager.loadImage("images/Quit1.png");
 		quit2Image = ImageManager.loadImage("images/Quit2.png");
+
 
 		setButtonAreas();
 
@@ -69,7 +79,8 @@ public class Screen extends JFrame implements
 		addMouseListener(this);
 		addMouseMotionListener(this);
 
-		soundManager = SoundManager.getInstance();
+		//animation = new BirdAnimation();
+		//soundManager = SoundManager.getInstance();
 		image = new BufferedImage (pWidth, pHeight, BufferedImage.TYPE_INT_RGB);
 
 		startGame();
@@ -126,9 +137,9 @@ public class Screen extends JFrame implements
 	public void gameUpdate () {
 		tileMap.update();
 
-		if (!isPaused && isAnimShown && !isAnimPaused)
-			
-		imageEffect.update();
+		//if (!isPaused && isAnimShown && !isAnimPaused)
+			//animation.update();
+		//imageEffect.update();
 
 	}
 
@@ -162,10 +173,10 @@ public class Screen extends JFrame implements
 
 		tileMap.draw(imageContext);
 	
-		if (isAnimShown)
-		
+		//if (isAnimShown)
+			//animation.draw(imageContext);		// draw the animation
 
-		imageEffect.draw(imageContext);			// draw the image effect
+		//imageEffect.draw(imageContext);			// draw the image effect
 
 		//Graphics2D g2 = (Graphics2D) getGraphics();	// get the graphics context for window
 		drawButtons(imageContext);			// draw the buttons
@@ -250,22 +261,29 @@ public class Screen extends JFrame implements
 		//  leftOffset is the distance of a button from the left side of the window.
 		//  Buttons are placed at the top of the window.
 
-		int leftOffset = (pWidth - (5 * 150) - (4 * 20)) / 2;
-		pauseButtonArea = new Rectangle(leftOffset, 60, 150, 40);
+		int resumeLength = resume1Image.getWidth(null);
+		int resumeHeight = resume1Image.getHeight(null);
+		int leftOffset = (pWidth / 2) - 280;
+		pauseButtonArea = new Rectangle(leftOffset, 300, 150, 40);
 
-		leftOffset = leftOffset + 170;
-		stopButtonArea = new Rectangle(leftOffset, 60, 150, 40);
+		int restartLength = restart1Image.getWidth(null);
+		int restartHeight = restart1Image.getHeight(null);
+		leftOffset = leftOffset + 200;
+		stopButtonArea = new Rectangle(leftOffset, 300, 150, 40);
 
-		leftOffset = leftOffset + 170;
+		//leftOffset = leftOffset + 170;
+		//stopButtonArea = new Rectangle(leftOffset, 60, 150, 40);
+
+		//leftOffset = leftOffset + 170;
 		showAnimButtonArea = new Rectangle(leftOffset, 60, 150, 40);
 
-		leftOffset = leftOffset + 170;
+		//leftOffset = leftOffset + 170;
 		pauseAnimButtonArea = new Rectangle(leftOffset, 60, 150, 40);
 
-		leftOffset = leftOffset + 170;
+		leftOffset = leftOffset + 200;
 		int quitLength = quit1Image.getWidth(null);
 		int quitHeight = quit1Image.getHeight(null);
-		quitButtonArea = new Rectangle(leftOffset, 55, 180, 50);
+		quitButtonArea = new Rectangle(leftOffset, 300, 180, 50);
 	}
 
 
@@ -279,7 +297,30 @@ public class Screen extends JFrame implements
 
     		g.setColor(Color.black);	// set outline colour of button
 
-		// draw the pause 'button'
+
+		// draw the pause button (an actual image that changes when the mouse moves over it)
+
+		if (isOverPauseButton)
+		   g.drawImage(resume1Image, pauseButtonArea.x, pauseButtonArea.y, 180, 50, null);
+		    	       //quitButtonArea.width, quitButtonArea.height, null);
+				
+		else
+		   g.drawImage(resume2Image, pauseButtonArea.x, pauseButtonArea.y, 180, 50, null);
+		    	       //quitButtonArea.width, quitButtonArea.height, null);
+
+
+		// draw the restart button (an actual image that changes when the mouse moves over it)
+
+		if (isOverStopButton)
+			g.drawImage(restart1Image, stopButtonArea.x, stopButtonArea.y, 180, 50, null);
+					//quitButtonArea.width, quitButtonArea.height, null);
+			 
+		else
+			g.drawImage(restart2Image, stopButtonArea.x, stopButtonArea.y, 180, 50, null);
+					//quitButtonArea.width, quitButtonArea.height, null);
+
+
+/* 		// draw the pause 'button'			   
 
 		g.setColor(Color.BLACK);
 		g.drawOval(pauseButtonArea.x, pauseButtonArea.y, 
@@ -293,11 +334,11 @@ public class Screen extends JFrame implements
 		if (isPaused && !isStopped)
 			g.drawString("Paused", pauseButtonArea.x+45, pauseButtonArea.y+25);
 		else
-			g.drawString("Pause", pauseButtonArea.x+55, pauseButtonArea.y+25);
+			g.drawString("Pause", pauseButtonArea.x+55, pauseButtonArea.y+25); */
 
 		// draw the stop 'button'
 
-		g.setColor(Color.BLACK);
+/* 		g.setColor(Color.BLACK);
 		g.drawOval(stopButtonArea.x, stopButtonArea.y, 
 			   stopButtonArea.width, stopButtonArea.height);
 
@@ -309,11 +350,11 @@ public class Screen extends JFrame implements
 		if (isStopped)
 			g.drawString("Stopped", stopButtonArea.x+40, stopButtonArea.y+25);
 		else
-			g.drawString("Stop", stopButtonArea.x+60, stopButtonArea.y+25);
+			g.drawString("Stop", stopButtonArea.x+60, stopButtonArea.y+25); */
 
 		// draw the show animation 'button'
 
-		g.setColor(Color.BLACK);
+/* 		g.setColor(Color.BLACK);
 		g.drawOval(showAnimButtonArea.x, showAnimButtonArea.y, 
 			   showAnimButtonArea.width, showAnimButtonArea.height);
 
@@ -321,11 +362,11 @@ public class Screen extends JFrame implements
 			g.setColor(Color.WHITE);
 		else
 			g.setColor(Color.RED);
-      		g.drawString("Start Anim", showAnimButtonArea.x+35, showAnimButtonArea.y+25);
+      		g.drawString("Start Anim", showAnimButtonArea.x+35, showAnimButtonArea.y+25); */
 
 		// draw the pause anim 'button'
 
-		g.setColor(Color.BLACK);
+/* 		g.setColor(Color.BLACK);
 		g.drawOval(pauseAnimButtonArea.x, pauseAnimButtonArea.y, 
 			   pauseAnimButtonArea.width, pauseAnimButtonArea.height);
 
@@ -337,7 +378,7 @@ public class Screen extends JFrame implements
 		if (isAnimShown && isAnimPaused && !isStopped)
 			g.drawString("Anim Paused", pauseAnimButtonArea.x+30, pauseAnimButtonArea.y+25);
 		else
-			g.drawString("Pause Anim", pauseAnimButtonArea.x+35, pauseAnimButtonArea.y+25);
+			g.drawString("Pause Anim", pauseAnimButtonArea.x+35, pauseAnimButtonArea.y+25); */
 
 		// draw the quit button (an actual image that changes when the mouse moves over it)
 
@@ -368,14 +409,17 @@ public class Screen extends JFrame implements
 		if (gameThread == null) {
 			//soundManager.playSound ("background", true);
 
-			tileManager = new TileMapManager (this);
+		 	tileManager = new TileMapManager (this);
 
 			try {
 				tileMap = tileManager.loadMap("maps/map1.txt");
-				int w, h;
-				w = tileMap.getWidth();
+				
+                int w, h;
+				
+                w = tileMap.getWidth();
 				h = tileMap.getHeight();
-				System.out.println ("Width of tilemap " + w);
+				
+                System.out.println ("Width of tilemap " + w);
 				System.out.println ("Height of tilemap " + h);
 			}
 			catch (Exception e) {
@@ -383,9 +427,9 @@ public class Screen extends JFrame implements
 				System.exit(0);
 			}
 
-			imageEffect = new ImageEffect (this);
+			//imageEffect = new ImageEffect (this);
 			gameThread = new Thread(this);
-			gameThread.start();			
+			gameThread.start();	 		
 
 		}
 	}
@@ -425,7 +469,7 @@ public class Screen extends JFrame implements
 			return;				//  one of these keys (ESC, Q, END)			
          	}
 		else
-		if (keyCode == KeyEvent.VK_LEFT) {
+ 		if (keyCode == KeyEvent.VK_LEFT) {
 			tileMap.moveLeft();
 		}
 		else
@@ -517,17 +561,17 @@ public class Screen extends JFrame implements
 		if (isOverShowAnimButton && !isPaused) {// mouse click on Start Anim button
 			isAnimShown = true;
 		 	isAnimPaused = false;
-			
+			//animation.start();
 		}
 		else
 		if (isOverPauseAnimButton) {		// mouse click on Pause Anim button
 			if (isAnimPaused) {
 				isAnimPaused = false;
-			
+				//animation.playSound();
 			}
 			else {
 				isAnimPaused = true;	// toggle pausing
-				
+				//animation.stopSound();
 			}
 		}
 		else if (isOverQuitButton) {		// mouse click on Quit button

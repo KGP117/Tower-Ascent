@@ -14,7 +14,7 @@ import javax.swing.JFrame;
 
 public class TileMap {
 
-    private static final int TILE_SIZE = 64;
+    private static final int TILE_SIZE = 32; // set according to tile images
     private static final int TILE_SIZE_BITS = 6;
 
     private Image[][] tiles;
@@ -23,9 +23,9 @@ public class TileMap {
     private int offsetY;
 
     private LinkedList sprites;
-    private Player player;
+    //private Player player;
 
-    BackgroundManager bgManager;
+    //BackgroundManager bgManager;
 
     private JFrame window;
     private Dimension dimension;
@@ -50,25 +50,25 @@ public class TileMap {
        	offsetY = screenHeight - tilesToPixels(mapHeight);
 	System.out.println("offsetY: " + offsetY);
 
-	bgManager = new BackgroundManager (window, 12);
+	//bgManager = new BackgroundManager (window, 12);
 
         tiles = new Image[mapWidth][mapHeight];
-	player = new Player (window, this, bgManager);
+	    //player = new Player (window, this, bgManager);
         sprites = new LinkedList();
 
-	Image playerImage = player.getImage();
-	int playerHeight = playerImage.getHeight(null);
+	//Image playerImage = player.getImage();
+	//int playerHeight = playerImage.getHeight(null);
 
 	int x, y;
 	// x = (dimension.width / 2) + TILE_SIZE;	// position player in middle of screen
 
 	x = 192;					// position player in 'random' location
-	y = dimension.height - (TILE_SIZE + playerHeight);
+	//y = dimension.height - (TILE_SIZE + playerHeight);
 
-        player.setX(x);
-        player.setY(y);
+        //player.setX(x);
+        //player.setY(y);
 
-	System.out.println("Player coordinates: " + x + "," + y);
+	//System.out.println("Player coordinates: " + x + "," + y);
 
     }
 
@@ -171,10 +171,9 @@ public class TileMap {
         // get the scrolling position of the map
         // based on player's position
 
-        int offsetX = screenWidth / 2 -
-            Math.round(player.getX()) - TILE_SIZE;
-        offsetX = Math.min(offsetX, 0);
-        offsetX = Math.max(offsetX, screenWidth - mapWidthPixels);
+        //int offsetX = screenWidth / 2 - Math.round(player.getX()) - TILE_SIZE;
+        //offsetX = Math.min(offsetX, 0);
+        //offsetX = Math.max(offsetX, screenWidth - mapWidthPixels);
 
 /*
         // draw black background, if needed
@@ -187,18 +186,18 @@ public class TileMap {
 */
 	// draw the background first
 
-	bgManager.draw (g2);
+	//bgManager.draw (g2);
 
         // draw the visible tiles
 
-        int firstTileX = pixelsToTiles(-offsetX);
+        int firstTileX = pixelsToTiles(-1); // replace -1 with offset
         int lastTileX = firstTileX + pixelsToTiles(screenWidth) + 1;
         for (int y=0; y<mapHeight; y++) {
             for (int x=firstTileX; x <= lastTileX; x++) {
                 Image image = getTile(x, y);
                 if (image != null) {
                     g2.drawImage(image,
-                        tilesToPixels(x) + offsetX,
+                        tilesToPixels(x) + 1, // replace 1 with offset
                         tilesToPixels(y) + offsetY,
                         null);
                 }
@@ -208,10 +207,10 @@ public class TileMap {
 
         // draw player
 
-        g2.drawImage(player.getImage(),
+/*         g2.drawImage(player.getImage(),
             Math.round(player.getX()) + offsetX,
             Math.round(player.getY()), //+ offsetY,
-            null);
+            null); */
 
 /*
         // draw sprites
@@ -236,45 +235,45 @@ public class TileMap {
 
     public void moveLeft() {
 	int x, y;
-	x = player.getX();
+/* 	x = player.getX();
 	y = player.getY();
 
 	String mess = "Going left. x = " + x + " y = " + y;
 	System.out.println(mess);
 
-	player.move(1);
+	player.move(1); */
 
     }
 
 
     public void moveRight() {
 	int x, y;
-	x = player.getX();
+/* 	x = player.getX();
 	y = player.getY();
 
 	String mess = "Going right. x = " + x + " y = " + y;
 	System.out.println(mess);
 
-	player.move(2);
+	player.move(2); */
 
     }
 
 
     public void jump() {
 	int x, y;
-	x = player.getX();
+/* 	x = player.getX();
 	y = player.getY();
 
 	String mess = "Jumping. x = " + x + " y = " + y;
 	System.out.println(mess);
 
-	player.move(3);
+	player.move(3); */
 
     }
 
 
     public void update() {
-	player.update();
+	//player.update();
     }
 
 }
