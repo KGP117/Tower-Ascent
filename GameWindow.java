@@ -9,18 +9,19 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 {
   	private static final int NUM_BUFFERS = 2;	// used for page flipping
 
-	private int pWidth, pHeight;     		// width and height of screen
+	private int pWidth;				// width of the screen
+	private int pHeight;     		// height of screen
+
+	private int buttonWidth = 180;		// width of a button
+	private int buttonHeight = 50;		// height of a button
 
 	private Thread gameThread = null;            	// the thread that controls the game
 	private volatile boolean isRunning = false;    	// used to stop the game thread
 
-	//private BirdAnimation animation = null;		// animation sprite
-	//private ImageEffect imageEffect;		// sprite demonstrating an image effect
-
 	private BufferedImage image;			// drawing area for each frame
 
-	private Image resume1Image;			// first image for resume button
-	private Image resume2Image;			// second image for resume button
+	private Image pause1Image;			// first image for resume button
+	private Image pause2Image;			// second image for resume button
 
 	private Image restart1Image;		// first image for restart button
 	private Image restart2Image;		// second image for restart button
@@ -28,32 +29,23 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private Image quit1Image;			// first image for quit button
 	private Image quit2Image;			// second image for quit button
 
-	private boolean finishedOff = false;		// used when the game terminates
+	private volatile boolean isOverPauseButton = false;
+	private Rectangle pauseButtonArea;		// used by the pause 'button'
+	private volatile boolean isPaused = false;
+	
+	private volatile boolean isOverRestartButton = false;
+	private Rectangle restartButtonArea;		// used by the restart 'button'
 
 	private volatile boolean isOverQuitButton = false;
 	private Rectangle quitButtonArea;		// used by the quit button
 
-	private volatile boolean isOverPauseButton = false;
-	private Rectangle pauseButtonArea;		// used by the pause 'button'
-	private volatile boolean isPaused = false;
-
-	private volatile boolean isOverStopButton = false;
-	private Rectangle stopButtonArea;		// used by the stop 'button'
-	private volatile boolean isStopped = false;
-
-	private volatile boolean isOverShowAnimButton = false;
-	private Rectangle showAnimButtonArea;		// used by the show animation 'button'
-	private volatile boolean isAnimShown = false;
-
-	private volatile boolean isOverPauseAnimButton = false;
-	private Rectangle pauseAnimButtonArea;		// used by the pause animation 'button'
-	private volatile boolean isAnimPaused = false;
+	private boolean finishedOff = false;		// used when the game terminates
    
 	private GraphicsDevice device;			// used for full-screen exclusive mode 
 	private Graphics gScr;
 	private BufferStrategy bufferStrategy;
 
-	//private SoundManager soundManager;
+	private SoundManager soundManager;
 	TileMapManager tileManager;
 	TileMap	tileMap;
 
@@ -63,8 +55,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 		initFullScreen();
 
-		resume1Image = ImageManager.loadImage("images/Pause1.png");
-		resume2Image = ImageManager.loadImage("images/Pause2.png");
+		pause1Image = ImageManager.loadImage("images/Pause1.png");
+		pause2Image = ImageManager.loadImage("images/Pause2.png");
 
 		restart1Image = ImageManager.loadImage("images/Restart1.png");
 		restart2Image = ImageManager.loadImage("images/Restart2.png");
@@ -79,8 +71,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		addMouseListener(this);
 		addMouseMotionListener(this);
 
-		//animation = new BirdAnimation();
-		//soundManager = SoundManager.getInstance();
+		soundManager = SoundManager.getInstance();
 		image = new BufferedImage (pWidth, pHeight, BufferedImage.TYPE_INT_RGB);
 
 		startGame();
@@ -90,6 +81,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	// implementation of Runnable interface
 
 	public void run () {
+		
 		try {
 			isRunning = true;
 			while (isRunning) {
@@ -136,11 +128,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	public void gameUpdate () {
 		tileMap.update();
-
-		//if (!isPaused && isAnimShown && !isAnimPaused)
-			//animation.update();
-		//imageEffect.update();
-
 	}
 
 
@@ -150,6 +137,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			gScr = bufferStrategy.getDrawGraphics();
 			gameRender(gScr);
 			gScr.dispose();
+			
 			if (!bufferStrategy.contentsLost())
 				bufferStrategy.show();
 			else
@@ -160,6 +148,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 			Toolkit.getDefaultToolkit().sync();
 		}
+		
 		catch (Exception e) { 
 			e.printStackTrace();  
 			isRunning = false; 
@@ -172,13 +161,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		Graphics2D imageContext = (Graphics2D) image.getGraphics();
 
 		tileMap.draw(imageContext);
-	
-		//if (isAnimShown)
-			//animation.draw(imageContext);		// draw the animation
 
-		//imageEffect.draw(imageContext);			// draw the image effect
-
-		//Graphics2D g2 = (Graphics2D) getGraphics();	// get the graphics context for window
 		drawButtons(imageContext);			// draw the buttons
 
 		Graphics2D g2 = (Graphics2D) gScr;
@@ -207,13 +190,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 		// we can now adjust the display modes, if we wish
 
-		showCurrentMode();
-
 		pWidth = getBounds().width;
 		pHeight = getBounds().height;
-		
-		System.out.println("Width of window is " + pWidth);
-		System.out.println("Height of window is " + pHeight);
 
 		try {
 			createBufferStrategy(NUM_BUFFERS);
@@ -227,187 +205,63 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
-	// This method provides details about the current display mode.
-
-	private void showCurrentMode() {
-
-		DisplayMode dm[] = device.getDisplayModes();
-
-		for (int i=0; i<dm.length; i++) {
-			System.out.println("Current Display Mode: (" + 
-                           dm[i].getWidth() + "," + dm[i].getHeight() + "," +
-                           dm[i].getBitDepth() + "," + dm[i].getRefreshRate() + ")  " );			
-		}
-
-		//DisplayMode d = new DisplayMode (800, 600, 32, 60);
-		//device.setDisplayMode(d);
-
-
-		DisplayMode dm1 = device.getDisplayMode();
-
-		dm1 = device.getDisplayMode();
-
-
-		System.out.println("Current Display Mode: (" + 
-                           dm1.getWidth() + "," + dm1.getHeight() + "," +
-                           dm1.getBitDepth() + "," + dm1.getRefreshRate() + ")  " );
-  	}
-
-
 	// Specify screen areas for the buttons and create bounding rectangles
 
 	private void setButtonAreas() {
 		
 		//  leftOffset is the distance of a button from the left side of the window.
-		//  Buttons are placed at the top of the window.
+		//  topOffset is the distance of a button from the top of the window.
+		//  Buttons are placed in the middle of the window when the game is paused.
 
-		int resumeLength = resume1Image.getWidth(null);
-		int resumeHeight = resume1Image.getHeight(null);
-		int leftOffset = (pWidth / 2) - 280;
-		pauseButtonArea = new Rectangle(leftOffset, 300, 150, 40);
-
-		int restartLength = restart1Image.getWidth(null);
-		int restartHeight = restart1Image.getHeight(null);
-		leftOffset = leftOffset + 200;
-		stopButtonArea = new Rectangle(leftOffset, 300, 150, 40);
-
-		//leftOffset = leftOffset + 170;
-		//stopButtonArea = new Rectangle(leftOffset, 60, 150, 40);
-
-		//leftOffset = leftOffset + 170;
-		showAnimButtonArea = new Rectangle(leftOffset, 60, 150, 40);
-
-		//leftOffset = leftOffset + 170;
-		pauseAnimButtonArea = new Rectangle(leftOffset, 60, 150, 40);
+		int leftOffset = (pWidth / 2) - (buttonWidth / 2) - 200;
+		int topOffset = (pHeight / 2) - (buttonHeight / 2);
+		pauseButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
 
 		leftOffset = leftOffset + 200;
-		int quitLength = quit1Image.getWidth(null);
-		int quitHeight = quit1Image.getHeight(null);
-		quitButtonArea = new Rectangle(leftOffset, 300, 180, 50);
+		restartButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
+
+		leftOffset = leftOffset + 200;
+		quitButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
 	}
 
 
 	private void drawButtons (Graphics g) {
-		Font oldFont, newFont;
 
-		oldFont = g.getFont();		// save current font to restore when finished
+		// buttons appear when the game is paused
+
+		if (isPaused == true){
+
+			// draw the pause button (an actual image that changes when the mouse moves over it)
+
+			if (isOverPauseButton)
+				g.drawImage(pause1Image, pauseButtonArea.x, pauseButtonArea.y, buttonWidth, buttonHeight, null);
+			else
+				g.drawImage(pause2Image, pauseButtonArea.x, pauseButtonArea.y, buttonWidth, buttonHeight, null);
+
+
+			// draw the restart button (an actual image that changes when the mouse moves over it)
+
+			if (isOverRestartButton)
+				g.drawImage(restart1Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
+			else
+				g.drawImage(restart2Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
+
+
+			// draw the quit button (an actual image that changes when the mouse moves over it)
+
+			if (isOverQuitButton)
+				g.drawImage(quit1Image, quitButtonArea.x, quitButtonArea.y, buttonWidth, buttonHeight, null);
+			else
+				g.drawImage(quit2Image, quitButtonArea.x, quitButtonArea.y, buttonWidth, buttonHeight, null);
+		
+		}
 	
-		newFont = new Font ("TimesRoman", Font.ITALIC + Font.BOLD, 18);
-		g.setFont(newFont);		// set this as font for text on buttons
-
-    		g.setColor(Color.black);	// set outline colour of button
-
-
-		// draw the pause button (an actual image that changes when the mouse moves over it)
-
-		if (isOverPauseButton)
-		   g.drawImage(resume1Image, pauseButtonArea.x, pauseButtonArea.y, 180, 50, null);
-		    	       //quitButtonArea.width, quitButtonArea.height, null);
-				
-		else
-		   g.drawImage(resume2Image, pauseButtonArea.x, pauseButtonArea.y, 180, 50, null);
-		    	       //quitButtonArea.width, quitButtonArea.height, null);
-
-
-		// draw the restart button (an actual image that changes when the mouse moves over it)
-
-		if (isOverStopButton)
-			g.drawImage(restart1Image, stopButtonArea.x, stopButtonArea.y, 180, 50, null);
-					//quitButtonArea.width, quitButtonArea.height, null);
-			 
-		else
-			g.drawImage(restart2Image, stopButtonArea.x, stopButtonArea.y, 180, 50, null);
-					//quitButtonArea.width, quitButtonArea.height, null);
-
-
-/* 		// draw the pause 'button'			   
-
-		g.setColor(Color.BLACK);
-		g.drawOval(pauseButtonArea.x, pauseButtonArea.y, 
-			   pauseButtonArea.width, pauseButtonArea.height);
-
-		if (isOverPauseButton && !isStopped)
-			g.setColor(Color.WHITE);
-		else
-			g.setColor(Color.RED);	
-
-		if (isPaused && !isStopped)
-			g.drawString("Paused", pauseButtonArea.x+45, pauseButtonArea.y+25);
-		else
-			g.drawString("Pause", pauseButtonArea.x+55, pauseButtonArea.y+25); */
-
-		// draw the stop 'button'
-
-/* 		g.setColor(Color.BLACK);
-		g.drawOval(stopButtonArea.x, stopButtonArea.y, 
-			   stopButtonArea.width, stopButtonArea.height);
-
-		if (isOverStopButton && !isStopped)
-			g.setColor(Color.WHITE);
-		else
-			g.setColor(Color.RED);
-
-		if (isStopped)
-			g.drawString("Stopped", stopButtonArea.x+40, stopButtonArea.y+25);
-		else
-			g.drawString("Stop", stopButtonArea.x+60, stopButtonArea.y+25); */
-
-		// draw the show animation 'button'
-
-/* 		g.setColor(Color.BLACK);
-		g.drawOval(showAnimButtonArea.x, showAnimButtonArea.y, 
-			   showAnimButtonArea.width, showAnimButtonArea.height);
-
-		if (isOverShowAnimButton && !isPaused && !isStopped)
-			g.setColor(Color.WHITE);
-		else
-			g.setColor(Color.RED);
-      		g.drawString("Start Anim", showAnimButtonArea.x+35, showAnimButtonArea.y+25); */
-
-		// draw the pause anim 'button'
-
-/* 		g.setColor(Color.BLACK);
-		g.drawOval(pauseAnimButtonArea.x, pauseAnimButtonArea.y, 
-			   pauseAnimButtonArea.width, pauseAnimButtonArea.height);
-
-		if (isOverPauseAnimButton && isAnimShown && !isPaused && !isStopped)
-			g.setColor(Color.WHITE);
-		else
-			g.setColor(Color.RED);
-
-		if (isAnimShown && isAnimPaused && !isStopped)
-			g.drawString("Anim Paused", pauseAnimButtonArea.x+30, pauseAnimButtonArea.y+25);
-		else
-			g.drawString("Pause Anim", pauseAnimButtonArea.x+35, pauseAnimButtonArea.y+25); */
-
-		// draw the quit button (an actual image that changes when the mouse moves over it)
-
-		if (isOverQuitButton)
-		   g.drawImage(quit1Image, quitButtonArea.x, quitButtonArea.y, 180, 50, null);
-		    	       //quitButtonArea.width, quitButtonArea.height, null);
-				
-		else
-		   g.drawImage(quit2Image, quitButtonArea.x, quitButtonArea.y, 180, 50, null);
-		    	       //quitButtonArea.width, quitButtonArea.height, null);
-/*
-		g.setColor(Color.BLACK);
-		g.drawOval(quitButtonArea.x, quitButtonArea.y, 
-			   quitButtonArea.width, quitButtonArea.height);
-		if (isOverQuitButton)
-			g.setColor(Color.WHITE);
-		else
-			g.setColor(Color.RED);
-
-		g.drawString("Quit", quitButtonArea.x+60, quitButtonArea.y+25);
-*/
-		g.setFont(oldFont);		// reset font
-
 	}
 
 
 	private void startGame() { 
 		if (gameThread == null) {
-			//soundManager.playSound ("background", true);
+			soundManager.playSound ("background", true);
 
 		 	tileManager = new TileMapManager (this);
 
@@ -422,12 +276,12 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
                 System.out.println ("Width of tilemap " + w);
 				System.out.println ("Height of tilemap " + h);
 			}
+			
 			catch (Exception e) {
 				System.out.println(e);
 				System.exit(0);
 			}
 
-			//imageEffect = new ImageEffect (this);
 			gameThread = new Thread(this);
 			gameThread.start();	 		
 
@@ -463,11 +317,15 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 		int keyCode = e.getKeyCode();
 
-		if ((keyCode == KeyEvent.VK_ESCAPE) || (keyCode == KeyEvent.VK_Q) ||
-             	   (keyCode == KeyEvent.VK_END)) {
-           		isRunning = false;		// user can quit anytime by pressing
-			return;				//  one of these keys (ESC, Q, END)			
-         	}
+		if ((keyCode == KeyEvent.VK_Q) || (keyCode == KeyEvent.VK_END)) {
+           	isRunning = false;		// user can quit anytime by pressing (Q, END)
+			return;				 			
+        }
+		else
+		if ((keyCode == KeyEvent.VK_ESCAPE) || (keyCode == KeyEvent.VK_P)) {
+			isPaused = true;		// user can pause anytime by pressing (ESC, P)
+		 	return;						
+	 	}
 		else
  		if (keyCode == KeyEvent.VK_LEFT) {
 			tileMap.moveLeft();
@@ -546,33 +404,11 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	private void testMousePress(int x, int y) {
 
-		if (isStopped && !isOverQuitButton) 	// don't do anything if game stopped
-			return;
-
-		if (isOverStopButton) {			// mouse click on Stop button
-			isStopped = true;
+		if (isOverRestartButton) {			// mouse click on Stop button
 			isPaused = false;
 		}
-		else
-		if (isOverPauseButton) {		// mouse click on Pause button
+		else if (isOverPauseButton) {		// mouse click on Pause button
 			isPaused = !isPaused;     	// toggle pausing
-		}
-		else 
-		if (isOverShowAnimButton && !isPaused) {// mouse click on Start Anim button
-			isAnimShown = true;
-		 	isAnimPaused = false;
-			//animation.start();
-		}
-		else
-		if (isOverPauseAnimButton) {		// mouse click on Pause Anim button
-			if (isAnimPaused) {
-				isAnimPaused = false;
-				//animation.playSound();
-			}
-			else {
-				isAnimPaused = true;	// toggle pausing
-				//animation.stopSound();
-			}
 		}
 		else if (isOverQuitButton) {		// mouse click on Quit button
 			isRunning = false;		// set running to false to terminate
@@ -588,9 +424,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private void testMouseMove(int x, int y) { 
 		if (isRunning) {
 			isOverPauseButton = pauseButtonArea.contains(x,y) ? true : false;
-			isOverStopButton = stopButtonArea.contains(x,y) ? true : false;
-			isOverShowAnimButton = showAnimButtonArea.contains(x,y) ? true : false;
-			isOverPauseAnimButton = pauseAnimButtonArea.contains(x,y) ? true : false;
+			isOverRestartButton = restartButtonArea.contains(x,y) ? true : false;
 			isOverQuitButton = quitButtonArea.contains(x,y) ? true : false;
 		}
 	}
