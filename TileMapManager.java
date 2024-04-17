@@ -14,8 +14,6 @@ import javax.swing.ImageIcon;
 public class TileMapManager {
 
     private ArrayList<Image> tiles;
-    private int currentMap = 0;
-
     private JFrame window;
 
 /*
@@ -72,8 +70,10 @@ public class TileMapManager {
         mapHeight = lines.size();
 
         TileMap newMap = new TileMap(window, mapWidth, mapHeight);
+        
         for (int y=0; y<mapHeight; y++) {
             String line = lines.get(y);
+            
             for (int x=0; x<line.length(); x++) {
                 char ch = line.charAt(x);
 
