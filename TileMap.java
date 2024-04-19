@@ -14,7 +14,7 @@ import javax.swing.JFrame;
 
 public class TileMap {
 
-    private static final int TILE_SIZE = 32; // set according to tile images
+    private static final int TILE_SIZE = 64; // set according to tile images
     private static final int TILE_SIZE_BITS = 6;
 
     private Image[][] tiles;
@@ -77,7 +77,7 @@ public class TileMap {
         Gets the width of this TileMap (number of pixels across).
     */
     public int getWidthPixels() {
-	return tilesToPixels(mapWidth);
+	    return tilesToPixels(mapWidth);
     }
 
 
@@ -98,7 +98,7 @@ public class TileMap {
 
 
     public int getOffsetY() {
-	return offsetY;
+	    return offsetY;
     }
 
     /**
