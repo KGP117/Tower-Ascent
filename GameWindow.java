@@ -49,6 +49,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	TileMapManager tileManager;
 	TileMap	tileMap;
 
+	
 	public GameWindow() {
  
 		super("Tower Ascent");
