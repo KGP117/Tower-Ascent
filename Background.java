@@ -50,7 +50,6 @@ public class Background {
 			backgroundX = 0;
 			backgroundX2 = bgImageWidth;
 		}
-
   	}
 
 
@@ -72,6 +71,46 @@ public class Background {
 			backgroundX2 = 0;
 		}			
    	}
+
+
+	public void moveUp() {
+
+		if (bgX == 0) {
+			backgroundX = 0;
+			backgroundX2 = bgImageWidth;			
+		}
+
+		bgX = bgX - bgDX;
+
+		backgroundX = backgroundX - bgDX;
+		backgroundX2 = backgroundX2 - bgDX;
+
+		if ((bgX + bgImageWidth) % bgImageWidth == 0) {
+			System.out.println ("Background change: bgX = " + bgX); 
+			backgroundX = 0;
+			backgroundX2 = bgImageWidth;
+		}
+  	}
+
+
+	public void moveDown() {
+
+		if (bgX == 0) {
+			backgroundX = 0;
+			backgroundX2 = bgImageWidth;			
+		}
+
+		bgX = bgX - bgDX;
+
+		backgroundX = backgroundX - bgDX;
+		backgroundX2 = backgroundX2 - bgDX;
+
+		if ((bgX + bgImageWidth) % bgImageWidth == 0) {
+			System.out.println ("Background change: bgX = " + bgX); 
+			backgroundX = 0;
+			backgroundX2 = bgImageWidth;
+		}
+  	}
  
 
   	public void draw (Graphics2D g2) {
