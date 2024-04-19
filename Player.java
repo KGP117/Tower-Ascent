@@ -130,36 +130,7 @@ public class Player {
 
 	  	return null;
    	}
- 
-/*
 
-   	public Point collidesWithTile(int newX, int newY) {
-
-	 	int playerWidth = playerImage.getWidth(null);
-	 	int playerHeight = playerImage.getHeight(null);
-
-      	int fromX = Math.min (x, newX);
-	 	int fromY = Math.min (y, newY);
-	 	int toX = Math.max (x, newX);
-	 	int toY = Math.max (y, newY);
-
-	 	int fromTileX = tileMap.pixelsToTiles (fromX);
-	 	int fromTileY = tileMap.pixelsToTiles (fromY);
-	 	int toTileX = tileMap.pixelsToTiles (toX + playerWidth - 1);
-	 	int toTileY = tileMap.pixelsToTiles (toY + playerHeight - 1);
-
-	 	for (int x=fromTileX; x<=toTileX; x++) {
-			for (int y=fromTileY; y<=toTileY; y++) {
-				if (tileMap.getTile(x, y) != null) {
-					Point tilePos = new Point (x, y);
-					return tilePos;
-				}
-			}
-	 	}
-	
-	 	return null;
-   	}
-*/
 
 
    	public synchronized void move (int direction) {
