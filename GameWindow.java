@@ -242,6 +242,19 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	private void drawButtons (Graphics g) {
 
+		Font oldFont, newFont;
+
+		oldFont = g.getFont();		// save current font to restore when finished
+	
+		newFont = new Font ("TimesRoman", Font.BOLD, 25);
+		g.setFont(newFont);		// set this as font for text
+		
+		g.setColor(Color.WHITE);
+		
+		g.drawString("LIVES", 108, 40);
+		
+		g.drawString("SCORE", 1000, 40);
+
 		// buttons appear when the game is paused
 
 		if (isPaused == true){
