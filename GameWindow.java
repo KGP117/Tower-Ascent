@@ -29,6 +29,9 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private Image quit1Image;			// first image for quit button
 	private Image quit2Image;			// second image for quit button
 
+	private Image fullHeart;
+	private Image emptyHeart;
+
 	private volatile boolean isOverPauseButton = false;
 	private Rectangle pauseButtonArea;		// used by the pause 'button'
 	private volatile boolean isPaused = false;
@@ -64,6 +67,9 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 		quit1Image = ImageManager.loadImage("images/Quit1.png");
 		quit2Image = ImageManager.loadImage("images/Quit2.png");
+
+		fullHeart = ImageManager.loadImage("images/full_heart.png");
+		emptyHeart = ImageManager.loadImage("images/empty_heart.png");
 
 
 		setButtonAreas();
@@ -164,6 +170,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		tileMap.draw(imageContext);
 
 		drawButtons(imageContext);			// draw the buttons
+		drawHearts(imageContext);
 
 		Graphics2D g2 = (Graphics2D) gScr;
 		g2.drawImage(image, 0, 0, pWidth, pHeight, null);
@@ -223,6 +230,13 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 		leftOffset = leftOffset + 200;
 		quitButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
+	}
+
+
+	private void drawHearts (Graphics g) {
+		g.drawImage(fullHeart, 50, 50, 50, 50, null);
+		g.drawImage(fullHeart, 120, 50, 50, 50, null);
+		g.drawImage(fullHeart, 190, 50, 50, 50, null);
 	}
 
 
