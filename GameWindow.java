@@ -48,6 +48,10 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private Graphics gScr;
 	private BufferStrategy bufferStrategy;
 
+	boolean rightPressed = false;
+	boolean leftPressed = false;
+	boolean spacePressed = false;
+
 	SoundManager soundManager;
 	TileMapManager tileManager;
 	TileMap	tileMap;
@@ -373,30 +377,45 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	 	}
 		else
  		if (keyCode == KeyEvent.VK_LEFT) {
+			leftPressed = true;
 			tileMap.moveLeft();
 		}
 		else
 		if (keyCode == KeyEvent.VK_RIGHT) {
+			rightPressed = true;
 			tileMap.moveRight();
 		}
 		if (keyCode == KeyEvent.VK_SPACE) {
+			spacePressed = true;
 			tileMap.jump();
 			soundManager.playSound ("jump", false);
 		}
-/* 		else
-		if (keyCode == KeyEvent.VK_UP) {
-			//bat.moveUp();
+		if (spacePressed && rightPressed) {
+			tileMap.jump();
+			tileMap.moveRight();
+			soundManager.playSound ("jump", false);
 		}
-		else
-		if (keyCode == KeyEvent.VK_DOWN) {
-			//bat.moveDown();
-		} */
+		if (spacePressed && leftPressed) {
+			tileMap.jump();
+			tileMap.moveLeft();
+			soundManager.playSound ("jump", false);
+		}
 
 	}
 
 
 	public void keyReleased (KeyEvent e) {
+		int keyCode = e.getKeyCode();
 
+		if (keyCode == KeyEvent.VK_LEFT) {
+			leftPressed = false;
+		} 
+		else if (keyCode == KeyEvent.VK_RIGHT) {
+			rightPressed = false;
+		} 
+		else if (keyCode == KeyEvent.VK_SPACE) {
+			spacePressed = false;
+		}
 	}
 
 
