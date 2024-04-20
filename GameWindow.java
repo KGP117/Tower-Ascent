@@ -48,7 +48,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private Graphics gScr;
 	private BufferStrategy bufferStrategy;
 
-	private SoundManager soundManager;
+	SoundManager soundManager;
 	TileMapManager tileManager;
 	TileMap	tileMap;
 
@@ -364,15 +364,16 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		}
 		if (keyCode == KeyEvent.VK_SPACE) {
 			tileMap.jump();
+			soundManager.playSound ("jump", false);
 		}
-		else
+/* 		else
 		if (keyCode == KeyEvent.VK_UP) {
 			//bat.moveUp();
 		}
 		else
 		if (keyCode == KeyEvent.VK_DOWN) {
 			//bat.moveDown();
-		}
+		} */
 
 	}
 
