@@ -273,4 +273,9 @@ public class TileMap {
 	    player.update();
     }
 
+
+    public static void addSprite(Sprite sprite) {
+        
+    }
+
 }
