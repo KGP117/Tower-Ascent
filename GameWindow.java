@@ -170,7 +170,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		tileMap.draw(imageContext);
 
 		drawButtons(imageContext);			// draw the buttons
-		drawHearts(imageContext);
+		drawLives(imageContext);
+		drawScore(imageContext);
 
 		Graphics2D g2 = (Graphics2D) gScr;
 		g2.drawImage(image, 0, 0, pWidth, pHeight, null);
@@ -233,14 +234,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
-	private void drawHearts (Graphics g) {
-		g.drawImage(fullHeart, 50, 50, 50, 50, null);
-		g.drawImage(fullHeart, 120, 50, 50, 50, null);
-		g.drawImage(fullHeart, 190, 50, 50, 50, null);
-	}
-
-
-	private void drawButtons (Graphics g) {
+	private void drawLives (Graphics g) {
 
 		Font oldFont, newFont;
 
@@ -254,6 +248,29 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		g.drawString("LIVES", 108, 40);
 		
 		g.drawString("SCORE", 1000, 40);
+
+		g.drawImage(fullHeart, 50, 50, 50, 50, null);
+		g.drawImage(fullHeart, 120, 50, 50, 50, null);
+		g.drawImage(fullHeart, 190, 50, 50, 50, null);
+	}
+
+
+	private void drawScore (Graphics g) {
+
+		Font oldFont, newFont;
+
+		oldFont = g.getFont();		// save current font to restore when finished
+	
+		newFont = new Font ("TimesRoman", Font.BOLD, 25);
+		g.setFont(newFont);		// set this as font for text
+		
+		g.setColor(Color.WHITE);
+		
+		g.drawString("SCORE", 1000, 40);
+	}
+
+
+	private void drawButtons (Graphics g) {
 
 		// buttons appear when the game is paused
 
