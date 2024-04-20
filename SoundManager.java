@@ -17,16 +17,16 @@ public class SoundManager {				// a Singleton class
 	private SoundManager () {
 		clips = new HashMap<String, Clip>();
 
-		Clip clip = loadClip("background.wav");
+		Clip clip = loadClip("sounds/background.wav");
 		clips.put("background", clip);		// background theme sound
 
-		clip = loadClip("hitSound.wav");
-		clips.put("hit", clip);			// played when player's sprite collide with another sprice
+/* 		clip = loadClip("hitSound.wav");
+		clips.put("hit", clip);			// played when player's sprite collide with another sprite */
 
 		clip = loadClip("BossMusic.wav");
 		clips.put("Boss", clip);		// played when the boss makes an appearance
 
-		clip = loadClip("jump.wav");
+		clip = loadClip("sounds/jump.wav");
 		clips.put("jump", clip);		// played for player jump
 
 		clip = loadClip("pew.wav");
