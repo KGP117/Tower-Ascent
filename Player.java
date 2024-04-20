@@ -54,7 +54,7 @@ public class Player {
    	}
 
 
-   	public Point collidesWithTile(int newX, int newY) {
+	public Point collidesWithTile(int newX, int newY) {
 
     	int playerWidth = playerImage.getWidth(null);
     	int offsetY = tileMap.getOffsetY();
@@ -136,13 +136,20 @@ public class Player {
    	public synchronized void move (int direction) {
 
       	int newX = x;
+		int newY = y;
       	Point tilePos = null;
 
       	if (!window.isVisible ()) return;
       
       	if (direction == 1) {		// move left
 	  		playerImage = playerLeftImage;
-          	newX = x - DX;
+			if (jumping){
+				newX = x - 2*DX;
+			}
+			else{
+				newX = x - DX;
+			}
+          	
 	  		
 			if (newX < 0) {
 				x = 0;
@@ -155,7 +162,12 @@ public class Player {
       	if (direction == 2) {		// move right
 	  		playerImage = playerRightImage;
       	  	int playerWidth = playerImage.getWidth(null);
-          	newX = x + DX;
+			if (jumping){
+				newX = x + 2*DX;
+			}
+			else{
+				newX = x + DX;
+			}
 
       	  	int tileMapWidth = tileMap.getWidthPixels();
 
@@ -193,6 +205,11 @@ public class Player {
 	  	if (direction == 2) {
 	      	x = newX;
 	      	bgManager.moveRight();
+   	  	}
+		else
+	  	if (direction == 3) {
+	      	y = newY;
+	      	bgManager.moveUp();
    	  	}
 
 			if (isInAir()) {
