@@ -3,11 +3,8 @@
 # The tiles are:
 #   (Space) Empty tile
 #   A..Z    Tiles A through Z
-#   o       Star
-#   !       Music Note
-#   *       Goal
-#   1       Bad Guy 1 (grub)
-#   2       Bad Guy 2 (fly)
+#   o       Coin
+#   !       Enemy
 
         EBBBBBBBBBF
         IJJJJJJJJJK
@@ -17,10 +14,10 @@
 
   EBBBBBBBBF       
   IJJJJJJJJK
- 
-     EBBBBBBBBBF
-     IJJJJJJJJJK
+             o 
+     EBBBBBBBBF
+     IJJJJJJJJK
         
                  EF 
-                 CD 
+            o    CD 
 BBBBBBBBBBBBBBBBBGHB
