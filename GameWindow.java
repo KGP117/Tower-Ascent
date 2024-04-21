@@ -89,7 +89,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
-	// implementation of Runnable interface
+	// Implementation of Runnable interface
 
 	public void run () {
 		
@@ -109,25 +109,23 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
-	/* This method performs some tasks before closing the game.
-	   The call to System.exit() should not be necessary; however,
-	   it prevents hanging when the game terminates.
-	*/
+	// Performs some tasks before closing the game
 
 	private void finishOff() { 
-    		if (!finishedOff) {
+		
+    	if (!finishedOff) {
 			finishedOff = true;
 			restoreScreen();
+
 			System.exit(0);
 		}
 	}
 
 
-	/* This method switches off full screen mode. The display
-	   mode is also reset if it has been changed.
-	*/
-
+	// This method switches off full screen mode
+	
 	private void restoreScreen() { 
+		
 		Window w = device.getFullScreenWindow();
 		
 		if (w != null)
@@ -137,10 +135,14 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
+	// Updates the game
+
 	public void gameUpdate () {
 		tileMap.update();
 	}
 
+
+	// Updates the screen
 
 	private void screenUpdate() { 
 
@@ -154,9 +156,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			else
 				System.out.println("Contents of buffer lost.");
       
-			// Sync the display on some systems.
-			// (on Linux, this fixes event queue problems)
-
+			// Sync the display on some systems
 			Toolkit.getDefaultToolkit().sync();
 		}
 		
@@ -167,15 +167,17 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
-	public void gameRender (Graphics gScr) {		// draw the game objects
+	// Draws the game objects
+
+	public void gameRender (Graphics gScr) {		
 
 		Graphics2D imageContext = (Graphics2D) image.getGraphics();
 
 		tileMap.draw(imageContext);
 
 		drawButtons(imageContext);			// draw the buttons
-		drawLives(imageContext);
-		drawScore(imageContext);
+		drawLives(imageContext);			// draw the player lives
+		drawScore(imageContext);			// draw the current score
 
 		Graphics2D g2 = (Graphics2D) gScr;
 		g2.drawImage(image, 0, 0, pWidth, pHeight, null);
@@ -185,7 +187,9 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
-	private void initFullScreen() {				// standard procedure to get into FSEM
+	// Standard procedure to get into FSEM
+
+	private void initFullScreen() {
 
 		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
 		device = ge.getDefaultScreenDevice();
@@ -240,10 +244,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	private void drawLives (Graphics g) {
 
-		Font oldFont, newFont;
+		Font newFont;
 
-		oldFont = g.getFont();		// save current font to restore when finished
-	
 		newFont = new Font ("TimesRoman", Font.BOLD, 25);
 		g.setFont(newFont);		// set this as font for text
 		
@@ -261,9 +263,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	private void drawScore (Graphics g) {
 
-		Font oldFont, newFont;
-
-		oldFont = g.getFont();		// save current font to restore when finished
+		Font newFont;
 	
 		newFont = new Font ("TimesRoman", Font.BOLD, 25);
 		g.setFont(newFont);		// set this as font for text
@@ -316,14 +316,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 			try {
 				tileMap = tileManager.loadMap("maps/map1.txt");
-				
-                int w, h;
-				
-                w = tileMap.getWidth();
-				h = tileMap.getHeight();
-				
-                System.out.println ("Width of tilemap " + w);
-				System.out.println ("Height of tilemap " + h);
 			}
 			
 			catch (Exception e) {
@@ -390,14 +382,12 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			tileMap.jump();
 			soundManager.playSound ("jump", false);
 		}
-		if (spacePressed && rightPressed) {
-			tileMap.jump();
-			tileMap.moveRight();
+		if (spacePressed && leftPressed) {
+			tileMap.jumpLeft();
 			soundManager.playSound ("jump", false);
 		}
-		if (spacePressed && leftPressed) {
-			tileMap.jump();
-			tileMap.moveLeft();
+		if (spacePressed && rightPressed) {
+			tileMap.jumpRight();
 			soundManager.playSound ("jump", false);
 		}
 
@@ -416,6 +406,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		else if (keyCode == KeyEvent.VK_SPACE) {
 			spacePressed = false;
 		}
+
 	}
 
 
