@@ -1,0 +1,23 @@
+# Map file for tile-based game
+# (Lines that start with '#' are comments)
+# The tiles are:
+#   (Space) Empty tile
+#   A..Z    Tiles A through Z
+#   o       Coin
+#   !       Enemy
+
+        EBBBBBBBBBF
+        IJJJJJJJJJK
+
+
+
+
+  EBBBBBBBBF       
+  IJJJJJJJJK
+             o 
+     EBBBBBBBBF
+     IJJJJJJJJK
+        
+                 EF 
+            o    CD 
+BBBBBBBBBBBBBBBBBGHB
