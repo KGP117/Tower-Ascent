@@ -18,9 +18,13 @@ public class BackgroundManager {
 
 	private String bgImages[] = {"images/layer_01.png"};
 
-  	private int moveAmount[] = {0};  
+  	private int moveAmountX[] = {0};  
 						// pixel amounts to move each background left or right
      					// a move amount of 0 makes a background stationary
+
+  	private int moveAmountY[] = {0};  
+						// pixel amounts to move each background left or right
+     					// a move amount of 0 makes a background stationary	
 
   	private Background[] backgrounds;
   	private int numBackgrounds;
@@ -35,7 +39,7 @@ public class BackgroundManager {
     	backgrounds = new Background[numBackgrounds];
 
     	for (int i = 0; i < numBackgrounds; i++) {
-       		backgrounds[i] = new Background(window, bgImages[i], moveAmount[i]);
+       		backgrounds[i] = new Background(window, bgImages[i], moveAmountX[i], moveAmountY[i]);
     	}
   	} 
 
