@@ -24,6 +24,8 @@ public class TileMap {
 
     private LinkedList sprites;
     private Player player;
+    private Sprite sprite1;
+    private Sprite sprite2;
 
     BackgroundManager bgManager;
 
@@ -48,19 +50,25 @@ public class TileMap {
     // get the y offset to draw all sprites and tiles
 
     offsetY = screenHeight - tilesToPixels(mapHeight);
-	System.out.println("offsetY: " + offsetY);
+	//System.out.println("offsetY: " + offsetY);
 
 	bgManager = new BackgroundManager (window, 12);
 
         tiles = new Image[mapWidth][mapHeight];
 	    player = new Player (window, this, bgManager);
+        sprite1 = new Sprite (window, this, bgManager);
+        sprite2 = new Sprite (window, this, bgManager);
         sprites = new LinkedList();
 
 	Image playerImage = player.getImage();
 	int playerHeight = playerImage.getHeight(null);
 
+    Image spriteImage1 = sprite1.getImage();
+    Image spriteImage2 = sprite2.getImage();
+	int spriteHeight1 = spriteImage1.getHeight(null);
+    int spriteHeight2 = spriteImage2.getHeight(null);
+
 	int x, y;
-	x = (dimension.width / 2) + TILE_SIZE;	// position player in middle of screen
 
 	x = 192;					// position player in 'random' location
 	y = dimension.height - (TILE_SIZE + playerHeight);
@@ -68,7 +76,7 @@ public class TileMap {
         player.setX(x);
         player.setY(y);
 
-	System.out.println("Player coordinates: " + x + "," + y);
+	//System.out.println("Player coordinates: " + x + "," + y);
 
     }
 
@@ -98,6 +106,7 @@ public class TileMap {
 
 
     public int getOffsetY() {
+        System.out.println("Return offset: " + offsetY);
 	    return offsetY;
     }
 
@@ -141,7 +150,7 @@ public class TileMap {
         Class method to convert a pixel position to a tile position.
     */
 
-    public static int pixelsToTiles(float pixels) {
+    public int pixelsToTiles(float pixels) {
         return pixelsToTiles(Math.round(pixels));
     }
 
@@ -150,7 +159,7 @@ public class TileMap {
         Class method to convert a pixel position to a tile position.
     */
 
-    public static int pixelsToTiles(int pixels) {
+    public int pixelsToTiles(int pixels) {
         return (int)Math.floor((float)pixels / TILE_SIZE);
     }
 
@@ -169,25 +178,34 @@ public class TileMap {
     public void draw(Graphics2D g2)
     {
         int mapWidthPixels = tilesToPixels(mapWidth);
+        int mapHeightPixels = tilesToPixels(mapHeight);
 
         // get the scrolling position of the map
         // based on player's position
 
-        int offsetX = screenWidth / 2 - 
-            Math.round(player.getX()) - TILE_SIZE;
+        // Calculate horizontal offset
+        int offsetX = screenWidth / 2 - Math.round(player.getX()) - TILE_SIZE;
         offsetX = Math.min(offsetX, 0);
         offsetX = Math.max(offsetX, screenWidth - mapWidthPixels);
 
-	// draw the background first
+        // Calculate vertical offset
+        int offsetY = screenHeight / 2 - Math.round(player.getY()) - TILE_SIZE;
+        System.out.println("offsetY1: " + offsetY);
+        offsetY = Math.min(offsetY, 0);
+        System.out.println("offsetY2: " + offsetY);
+        offsetY = Math.max(offsetY, screenHeight - mapHeightPixels);
+        System.out.println("offsetY3: " + offsetY);
 
-	bgManager.draw (g2);
+	    // draw the background first
+	    bgManager.draw (g2);
 
         // draw the visible tiles
-
         int firstTileX = pixelsToTiles(-offsetX);
         int lastTileX = firstTileX + pixelsToTiles(screenWidth) + 1;
+        int firstTileY = pixelsToTiles(-offsetY);
+        int lastTileY = firstTileY + pixelsToTiles(screenHeight) + 1;
         
-        for (int y=0; y<mapHeight; y++) {
+        for (int y = firstTileY; y <= lastTileY; y++) {
             
             for (int x=firstTileX; x <= lastTileX; x++) {
                 Image image = getTile(x, y);
@@ -209,72 +227,97 @@ public class TileMap {
             Math.round(player.getY()), //+ offsetY,
             null);
 
-/*
+        // draw sprite
+
+        g2.drawImage(sprite1.getImage(),
+            850,
+            570, //+ offsetY,
+            null);
+
+        g2.drawImage(sprite2.getImage(),
+            600,
+            70, //+ offsetY,
+            null);    
+
+
         // draw sprites
-        Iterator i = map.getSprites();
+        Iterator i = getSprites();
         while (i.hasNext()) {
             Sprite sprite = (Sprite)i.next();
             int x = Math.round(sprite.getX()) + offsetX;
             int y = Math.round(sprite.getY()) + offsetY;
-            g.drawImage(sprite.getImage(), x, y, null);
+            g2.drawImage(sprite.getImage(), x, y, null);
 
             // wake up the creature when it's on screen
-            if (sprite instanceof Creature &&
+            if (//sprite instanceof Creature &&
                 x >= 0 && x < screenWidth)
             {
-                ((Creature)sprite).wakeUp();
+                //((Creature)sprite).wakeUp();
             }
         }
-*/
+
 
     }
 
 
     public void moveLeft() {
-	int x, y;
-	x = player.getX();
-	y = player.getY();
+/*         int x, y;
+        x = player.getX();
+        y = player.getY(); */
 
-	String mess = "Going left. x = " + x + " y = " + y;
-	System.out.println(mess);
-
-	player.move(1);
+        player.move(1);
 
     }
 
 
     public void moveRight() {
-	int x, y;
-	x = player.getX();
-	y = player.getY();
+/*         int x, y;
+        x = player.getX();
+        y = player.getY(); */
 
-	String mess = "Going right. x = " + x + " y = " + y;
-	System.out.println(mess);
-
-	player.move(2);
+        player.move(2);
 
     }
 
 
     public void jump() {
-	int x, y;
-	x = player.getX();
-	y = player.getY();
+/*         int x, y;
+        x = player.getX();
+        y = player.getY(); */
 
-	String mess = "Jumping. x = " + x + " y = " + y;
-	System.out.println(mess);
-
-	player.move(3);
+        player.move(3);
 
     }
 
+    public void jumpLeft() {
+/*         int x, y;
+        x = player.getX();
+        y = player.getY(); */
+
+        player.move(4);
+        //System.out.println("Jump Right reached in TileMap");
+
+    }
+
+
+    public void jumpRight() {
+/*         int x, y;
+        x = player.getX();
+        y = player.getY(); */
+
+        player.move(5);
+
+        //System.out.println("Jump Right reached in TileMap");
+    }
+
+    
 
     public void update() {
 	    player.update();
     }
 
 
-    public static void addSprite(Sprite sprite) {
+    public void addSprite(Sprite sprite) {
         
     }
 
