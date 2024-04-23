@@ -1,11 +1,6 @@
-import java.awt.Dimension;
 import java.awt.Graphics2D;
-import java.awt.Rectangle;
-import java.awt.geom.Rectangle2D;
-import javax.swing.JPanel;
 import javax.swing.JFrame;
 import java.awt.Image;
-import javax.swing.ImageIcon;
 import java.awt.Point;
 
 public class Player {			
@@ -23,7 +18,6 @@ public class Player {
    	private int y;			// y-position of player's sprite
 
    	Graphics2D g2;
-   	private Dimension dimension;
 
    	private Image playerImage, playerLeftImage, playerRightImage;
 
@@ -36,7 +30,9 @@ public class Player {
 
    	private boolean inAir;
    	private int initialVelocity;
-   	private int startAir;
+
+
+	// Player Constructor
 
    	public Player (JFrame window, TileMap t, BackgroundManager b) {
       	this.window = window;
@@ -54,10 +50,12 @@ public class Player {
    	}
 
 
-	public Point collidesWithTile(int newX, int newY) {
+	// checks if the player collides with a tile
 
-    	int playerWidth = playerImage.getWidth(null);
+	public Point collidesWithTile(int newX, int newY) { 	
+
     	int offsetY = tileMap.getOffsetY();
+		System.out.println("Player offset: " + offsetY);
 		int xTile = tileMap.pixelsToTiles(newX);
 		int yTile = tileMap.pixelsToTiles(newY - offsetY);
 
@@ -71,10 +69,13 @@ public class Player {
    	}
 
 
+	// checks if the player collides with a tile below them
+
    	public Point collidesWithTileDown (int newX, int newY) {
 
 	  	int playerWidth = playerImage.getWidth(null);
       	int playerHeight = playerImage.getHeight(null);
+
       	int offsetY = tileMap.getOffsetY();
 	  	int xTile = tileMap.pixelsToTiles(newX);
 	  	int yTileFrom = tileMap.pixelsToTiles(y - offsetY);
@@ -101,6 +102,8 @@ public class Player {
 	  	return null;
    	}
 
+
+	// checks if the player collides with a tile above them
 
    	public Point collidesWithTileUp (int newX, int newY) {
 
@@ -132,8 +135,12 @@ public class Player {
    	}
 
 
+	// handles player movement
 
    	public synchronized void move (int direction) {
+
+
+		//System.out.println("direction: " + direction);
 
       	int newX = x;
 		int newY = y;
@@ -178,6 +185,15 @@ public class Player {
 
 	  	tilePos = collidesWithTile(newX+playerWidth, y);			
       	}
+		else 
+		if (direction == 4){
+			jumpLeft();
+			newX = x - DX;
+		}
+		else 
+		if (direction == 5){
+			//jumpRight();
+		}
       	else				// jump
       	if (direction == 3 && !jumping) {	
           	jump();
@@ -186,12 +202,12 @@ public class Player {
     
       	if (tilePos != null) {  
          	if (direction == 1) {
-	     		System.out.println (": Collision going left");
+	     		//System.out.println (": Collision going left");
              	x = ((int) tilePos.getX() + 1) * TILE_SIZE;	   // keep flush with right side of tile
 	 		}
         	else
         	if (direction == 2) {
-	     		System.out.println (": Collision going right");
+	     		//System.out.println (": Collision going right");
       	     	int playerWidth = playerImage.getWidth(null);
              	x = ((int) tilePos.getX()) * TILE_SIZE - playerWidth; // keep flush with left side of tile
 	 		}
@@ -213,7 +229,7 @@ public class Player {
    	  	}
 
 			if (isInAir()) {
-				System.out.println("In the air. Starting to fall.");
+				//System.out.println("In the air. Starting to fall.");
 				if (direction == 1) {				// make adjustment for falling on left side of tile
 					int playerWidth = playerImage.getWidth(null);
 					x = x - playerWidth + DX;
@@ -272,6 +288,39 @@ public class Player {
    	}
 
 
+	public void jumpLeft () {  
+
+		Point tilePos = null;
+
+		if (!window.isVisible ()) return;
+
+		int newX = x;
+
+		System.out.println("x: " + newX);
+
+		playerImage = playerLeftImage;
+		newX = x - 2*DX;
+          	
+		System.out.println("x: " + newX);	
+
+		if (newX < 0) {
+			x = 0;
+			return;
+	  	}
+
+		jumping = true;
+		timeElapsed = 0;
+
+		goingUp = true;
+		goingDown = false;
+
+		startY = y;
+		initialVelocity = 70;
+
+		tilePos = collidesWithTile(newX, y);
+	}
+
+
    	public void update () {
       	int distance = 0;
       	int newY = 0;
@@ -292,7 +341,6 @@ public class Player {
 			Point tilePos = collidesWithTileUp (x, newY);	
 	   	
 			if (tilePos != null) {				// hits a tile going up
-				System.out.println ("Jumping: Collision Going Up!");
 
 				int offsetY = tileMap.getOffsetY();
 				int topTileY = ((int) tilePos.getY()) * TILE_SIZE + offsetY;
@@ -309,7 +357,6 @@ public class Player {
 	    if (goingDown) {			
 			Point tilePos = collidesWithTileDown (x, newY);
 	   		if (tilePos != null) {				// hits a tile going down
-		    	System.out.println ("Jumping: Collision Going Down!");
 	  	    	int playerHeight = playerImage.getHeight(null);
 		    	goingDown = false;
 
@@ -322,7 +369,6 @@ public class Player {
 	       	}
 	       	else {
 		    	y = newY;
-		    	System.out.println ("Jumping: No collision.");
 	       }
 	   	}
       	}
