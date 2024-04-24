@@ -100,7 +100,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 					gameUpdate();
 				}
 				screenUpdate();
-				Thread.sleep (50);
+				Thread.sleep (60);
 			}
 		}
 		catch(InterruptedException e) {}
