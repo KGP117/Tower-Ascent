@@ -382,14 +382,14 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			tileMap.jump();
 			soundManager.playSound ("jump", false);
 		}
-		if (spacePressed && leftPressed) {
+/* 		if (spacePressed && leftPressed) {
 			tileMap.jumpLeft();
 			soundManager.playSound ("jump", false);
 		}
 		if (spacePressed && rightPressed) {
 			tileMap.jumpRight();
 			soundManager.playSound ("jump", false);
-		}
+		} */
 
 	}
 
