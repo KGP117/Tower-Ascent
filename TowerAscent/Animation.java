@@ -122,6 +122,19 @@ public class Animation {
 	return isActive;
     }
 
+    public void flicker(boolean flicker) {
+        if (flicker) {
+            long startTime = System.currentTimeMillis();
+            while (System.currentTimeMillis() - startTime < 1000) {
+                isActive = !isActive;
+                try {
+                    Thread.sleep(100);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+            }
+        }
+    }
 
     private class AnimFrame {					// inner class for the frames of the animation
 

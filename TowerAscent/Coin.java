@@ -48,16 +48,7 @@ public class Coin {
         animCoin = null;
     }
 
-    public boolean colide(int playerX,int playerY){
-        return collision;
-    }
-
-    public int collected(int playerX,int playerY){
-        if(colide(x,y)){
-            erase();
-        }
-        return 1;
-    }   
+    
 
 
 }
