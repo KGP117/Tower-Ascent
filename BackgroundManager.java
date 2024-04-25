@@ -16,15 +16,18 @@ import javax.swing.JFrame;
 
 public class BackgroundManager {
 
-	private String bgImages[] = {"images/layer_01.png"};
+	private String bgImages[] = {"images/layer_08.png",
+			       	     "images/layer_07.png",
+				     "images/layer_06.png",
+				     "images/layer_05.png",
+				     "images/layer_04.png",
+				     "images/layer_03.png",
+				     "images/layer_02.png",
+			       	     "images/layer_01.png"};
 
-  	private int moveAmountX[] = {0};  
+  	private int moveAmount[] = {1, 2, 3, 4, 4, 4, 5, 10};  
 						// pixel amounts to move each background left or right
-     					// a move amount of 0 makes a background stationary
-
-  	private int moveAmountY[] = {0};  
-						// pixel amounts to move each background left or right
-     					// a move amount of 0 makes a background stationary	
+     						// a move amount of 0 makes a background stationary
 
   	private Background[] backgrounds;
   	private int numBackgrounds;
@@ -33,36 +36,26 @@ public class BackgroundManager {
 
   	public BackgroundManager(JFrame window, int moveSize) {
 						// ignore moveSize
-    	this.window = window;
+    		this.window = window;
 
-    	numBackgrounds = bgImages.length;
-    	backgrounds = new Background[numBackgrounds];
+    		numBackgrounds = bgImages.length;
+    		backgrounds = new Background[numBackgrounds];
 
-    	for (int i = 0; i < numBackgrounds; i++) {
-       		backgrounds[i] = new Background(window, bgImages[i], moveAmountX[i], moveAmountY[i]);
-    	}
+    		for (int i = 0; i < numBackgrounds; i++) {
+       			backgrounds[i] = new Background(window, bgImages[i], moveAmount[i]);
+    		}
   	} 
 
 
   	public void moveRight() { 
 		for (int i=0; i < numBackgrounds; i++)
-      		backgrounds[i].moveRight();
+      			backgrounds[i].moveRight();
   	}
 
 
   	public void moveLeft() {
 		for (int i=0; i < numBackgrounds; i++)
-      		backgrounds[i].moveLeft();
-  	}
-
-	public void moveUp() {
-		for (int i=0; i < numBackgrounds; i++)
-      		backgrounds[i].moveUp();
-  	}
-
-	public void moveDown() {
-		for (int i=0; i < numBackgrounds; i++)
-      		backgrounds[i].moveDown();
+      			backgrounds[i].moveLeft();
   	}
 
 
@@ -71,7 +64,8 @@ public class BackgroundManager {
 
   	public void draw (Graphics2D g2) { 
 		for (int i=0; i < numBackgrounds; i++)
-      		backgrounds[i].draw(g2);
+      			backgrounds[i].draw(g2);
   	}
 
 }
+

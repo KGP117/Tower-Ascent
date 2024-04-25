@@ -7,7 +7,6 @@ import javax.swing.ImageIcon;
 public class Background {
   	private Image bgImage;
   	private int bgImageWidth;      		// width of the background (>= panel Width)
-	private int bgImageHeight;      	// height of the background (>= panel Height)
 
 	private Dimension dimension;
 
@@ -16,23 +15,18 @@ public class Background {
 	private int backgroundX2;
 	private int bgDX;			// size of the background move (in pixels)
 
-	private int bgY;
-	private int backgroundY;
-	private int backgroundY2;
-	private int bgDY;			// size of the background move (in pixels)
 
-
-	public Background(JFrame window, String imageFile, int bgDX, int bgDY) {
+	public Background(JFrame window, String imageFile, int bgDX) {
 
     		this.bgImage = loadImage(imageFile);
     		bgImageWidth = bgImage.getWidth(null);	// get width of the background
 
-		//System.out.println ("bgImageWidth = " + bgImageWidth);
+		System.out.println ("bgImageWidth = " + bgImageWidth);
 
 		dimension = window.getSize();
 
 		if (bgImageWidth < dimension.width)
-      			//System.out.println("Background width < panel width");
+      			System.out.println("Background width < panel width");
 
     		this.bgDX = bgDX;
 
@@ -52,10 +46,11 @@ public class Background {
 		backgroundX2 = backgroundX2 - bgDX;
 
 		if ((bgX + bgImageWidth) % bgImageWidth == 0) {
-			//System.out.println ("Background change: bgX = " + bgX); 
+			System.out.println ("Background change: bgX = " + bgX); 
 			backgroundX = 0;
 			backgroundX2 = bgImageWidth;
 		}
+
   	}
 
 
@@ -77,46 +72,6 @@ public class Background {
 			backgroundX2 = 0;
 		}			
    	}
-
-
-	public void moveUp() {
-
-		if (bgY == 0) {
-			backgroundY = 0;
-			backgroundY2 = bgImageHeight;			
-		}
-
-		bgY = bgY - bgDY;
-
-		backgroundY = backgroundY - bgDY;
-		backgroundY = backgroundY2 - bgDY;
-
-		if ((bgY + bgImageHeight) % bgImageHeight == 0) {
-			//System.out.println ("Background change: bgY = " + bgY); 
-			backgroundY = 0;
-			backgroundY2 = bgImageHeight;
-		}
-  	}
-
-
-	public void moveDown() {
-
-		if (bgX == 0) {
-			backgroundX = 0;
-			backgroundX2 = bgImageWidth;			
-		}
-
-		bgX = bgX - bgDX;
-
-		backgroundX = backgroundX - bgDX;
-		backgroundX2 = backgroundX2 - bgDX;
-
-		if ((bgX + bgImageWidth) % bgImageWidth == 0) {
-			//System.out.println ("Background change: bgX = " + bgX); 
-			backgroundX = 0;
-			backgroundX2 = bgImageWidth;
-		}
-  	}
  
 
   	public void draw (Graphics2D g2) {
