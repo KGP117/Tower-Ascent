@@ -20,20 +20,29 @@ public class SoundManager {				// a Singleton class
 		Clip clip = loadClip("sounds/background.wav");
 		clips.put("background", clip);		// background theme sound
 
-/* 		clip = loadClip("hitSound.wav");
-		clips.put("hit", clip);			// played when player's sprite collide with another sprite */
+		clip = loadClip("sounds/boss_battle.wav");
+		clips.put("boss", clip);		// played when the boss makes an appearance
 
-		clip = loadClip("BossMusic.wav");
-		clips.put("Boss", clip);		// played when the boss makes an appearance
+		clip = loadClip("sounds/ground_smash.wav");
+		clips.put("groundSmash", clip);
+
+		clip = loadClip("sounds/intro.wav");
+		clips.put("intro", clip);
 
 		clip = loadClip("sounds/jump.wav");
 		clips.put("jump", clip);		// played for player jump
 
-		clip = loadClip("pew.wav");
+		clip = loadClip("sounds/lose.wav");
+		clips.put("lose", clip);
+
+		clip = loadClip("sounds/pew_pew_pew.wav");
 		clips.put("pew", clip);		// played for player shoot
 
-		clip = loadClip("enemyShoot.wav");
-		clips.put("shoot", clip);		// played for enemy shoots
+		clip = loadClip("sounds/projectile.wav");
+		clips.put("projectile", clip);		// played for enemy shoots
+
+		clip = loadClip("sounds/win.wav");
+		clips.put("win", clip);
 	}
 
 
