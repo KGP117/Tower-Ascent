@@ -6,42 +6,38 @@ import java.util.HashMap;				// for storing sound clips
 
 
 public class SoundManager {				// a Singleton class
-	HashMap<String, Clip> clips;
-
-   	Clip hitClip = null;				// played when bat hits ball
-   	Clip appearClip = null;				// played when ball is re-generated
-   	Clip backgroundClip = null;			// played continuously after ball is created
-
+	private HashMap<String, Clip> clips;
+	private boolean muted = false;				// whether sound is muted
 	private static SoundManager instance = null;	// keeps track of Singleton instance
 
 	private SoundManager () {
 		clips = new HashMap<String, Clip>();
 
-		Clip clip = loadClip("sounds/background.wav");
+		Clip clip = loadClip("sounds\\background.wav");
 		clips.put("background", clip);		// background theme sound
 
-		clip = loadClip("sounds/boss_battle.wav");
-		clips.put("boss", clip);		// played when the boss makes an appearance
+		clip = loadClip("sounds\\boss_battle.wav");
+		clips.put("bossBattle", clip);		// played when the boss makes an appearance
 
-		clip = loadClip("sounds/ground_smash.wav");
-		clips.put("groundSmash", clip);
+		clip = loadClip("sounds\\ground_smash.wav");
+		clips.put("bossShoot", clip);
 
-		clip = loadClip("sounds/intro.wav");
+		clip = loadClip("sounds\\intro.wav");
 		clips.put("intro", clip);
 
-		clip = loadClip("sounds/jump.wav");
+		clip = loadClip("sounds\\jump.wav");
 		clips.put("jump", clip);		// played for player jump
 
-		clip = loadClip("sounds/lose.wav");
+		clip = loadClip("sounds\\lose.wav");
 		clips.put("lose", clip);
 
-		clip = loadClip("sounds/pew_pew_pew.wav");
-		clips.put("pew", clip);		// played for player shoot
+		clip = loadClip("sounds\\pew_pew_pew.wav");
+		clips.put("playerShoot", clip);		// played for player shoot
 
-		clip = loadClip("sounds/projectile.wav");
-		clips.put("projectile", clip);		// played for enemy shoots
+		clip = loadClip("sounds\\projectile.wav");
+		clips.put("flyingShoot", clip);		// played for enemy shoots
 
-		clip = loadClip("sounds/win.wav");
+		clip = loadClip("sounds\\win.wav");
 		clips.put("win", clip);
 	}
 
@@ -113,7 +109,7 @@ public class SoundManager {				// a Singleton class
                 FloatControl gainControl = (FloatControl) clip.getControl(FloatControl.Type.MASTER_GAIN);
 					
                 if (gainControl != null) {
-					gainControl.setValue(muted ? 0.0f : 1.0f); // Set volume based on muted state
+					gainControl.setValue(muted ? 0.0f : 1.0f);
 				} else {
 					System.out.println("Volume control not supported for clip: " + clip);
 				}
