@@ -21,7 +21,6 @@ public class ImageManager {
 	}
 
 	public static BufferedImage loadBufferedImage(String filename) {
-		
 		BufferedImage bi = null;
 
 		File file = new File (filename);
@@ -38,24 +37,24 @@ public class ImageManager {
   	// make a copy of the BufferedImage src
 
 	public static BufferedImage copyImage(BufferedImage src) {
-		
 		if (src == null)
 			return null;
+
 
 		int imWidth = src.getWidth();
 		int imHeight = src.getHeight();
 
-		BufferedImage copy = new BufferedImage (imWidth, imHeight, BufferedImage.TYPE_INT_ARGB);
+		BufferedImage copy = new BufferedImage (imWidth, imHeight,
+							BufferedImage.TYPE_INT_ARGB);
 
-    	Graphics2D g2d = copy.createGraphics();
+    		Graphics2D g2d = copy.createGraphics();
 
-    	// copy image
-    	g2d.drawImage(src, 0, 0, null);
-    	g2d.dispose();
+    		// copy image
+    		g2d.drawImage(src, 0, 0, null);
+    		g2d.dispose();
 
-    	return copy; 
-	  
-	}
+    		return copy; 
+	  }
 
 }
 
