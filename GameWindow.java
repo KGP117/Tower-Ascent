@@ -36,8 +36,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private Rectangle pauseButtonArea;		// used by the pause 'button'
 	private volatile boolean isPaused = false;
 	
-	private volatile boolean isOverRestartButton = false;
-	private Rectangle restartButtonArea;		// used by the restart 'button'
+/* 	private volatile boolean isOverRestartButton = false;
+	private Rectangle restartButtonArea;		// used by the restart 'button' */
 
 	private volatile boolean isOverQuitButton = false;
 	private Rectangle quitButtonArea;		// used by the quit button
@@ -56,7 +56,11 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	TileMapManager tileManager;
 	TileMap	tileMap;
 
+	private boolean levelChange;
+	private int level;
+	private boolean gameOver;
 	
+
 	public GameWindow() {
  
 		super("Tower Ascent");
@@ -85,6 +89,9 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		soundManager = SoundManager.getInstance();
 		image = new BufferedImage (pWidth, pHeight, BufferedImage.TYPE_INT_RGB);
 
+		level = 1;
+		levelChange = false;
+
 		startGame();
 	}
 
@@ -100,7 +107,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 					gameUpdate();
 				}
 				screenUpdate();
-				Thread.sleep (50);
+				Thread.sleep (60);
 			}
 		}
 		catch(InterruptedException e) {}
@@ -138,7 +145,63 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	// Updates the game
 
 	public void gameUpdate () {
+		
 		tileMap.update();
+
+		if (levelChange) {
+			levelChange = false;
+			tileManager = new TileMapManager (this);
+
+			try {
+				String filename = "maps/map" + level + ".txt";
+				tileMap = tileManager.loadMap(filename);
+			}
+			catch (Exception e) {		// no more maps: terminate game
+				gameOver = true;
+				isPaused = !isPaused;
+				renderGameOverScreen();
+				//System.exit(0);
+				return;
+			}
+		}
+	}
+
+	private void renderGameOverScreen() {
+
+		Graphics2D imageContext = (Graphics2D) image.getGraphics();
+
+		tileMap.draw(imageContext);
+		drawButtons(imageContext);			// draw the buttons
+		drawPauseInfo(imageContext);
+		drawLives(imageContext);			// draw the player lives
+		drawScore(imageContext);			// draw the current score
+		drawTutorial(imageContext);
+		drawGameOver(imageContext);
+
+		Graphics2D g2 = (Graphics2D) gScr;
+		g2.drawImage(image, 0, 0, pWidth, pHeight, null);
+
+		imageContext.dispose();
+		g2.dispose();
+	}
+
+
+	private void drawGameOver(Graphics2D g) {
+
+		Font newFont;
+	
+		newFont = new Font ("TimesRoman", Font.BOLD, 15);
+		g.setFont(newFont);		// set this as font for text
+		
+		g.setColor(Color.WHITE);
+		
+		g.drawString("Gave Over", 100, 200);
+		g.drawString("Esc", 10, 30);
+	}
+
+
+	int getLevel() {
+		return level;
 	}
 
 
@@ -174,10 +237,11 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		Graphics2D imageContext = (Graphics2D) image.getGraphics();
 
 		tileMap.draw(imageContext);
-
 		drawButtons(imageContext);			// draw the buttons
+		drawPauseInfo(imageContext);
 		drawLives(imageContext);			// draw the player lives
 		drawScore(imageContext);			// draw the current score
+		drawTutorial(imageContext);
 
 		Graphics2D g2 = (Graphics2D) gScr;
 		g2.drawImage(image, 0, 0, pWidth, pHeight, null);
@@ -235,7 +299,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		pauseButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
 
 		leftOffset = leftOffset + 200;
-		restartButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
+		//restartButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
 
 		leftOffset = leftOffset + 200;
 		quitButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
@@ -274,6 +338,20 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
+	private void drawPauseInfo (Graphics g) {
+
+		Font newFont;
+	
+		newFont = new Font ("TimesRoman", Font.BOLD, 15);
+		g.setFont(newFont);		// set this as font for text
+		
+		g.setColor(Color.WHITE);
+		
+		g.drawString("Pause", 10, 20);
+		g.drawString("Esc", 10, 30);
+	}
+
+
 	private void drawButtons (Graphics g) {
 
 		// buttons appear when the game is paused
@@ -290,10 +368,10 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 			// draw the restart button (an actual image that changes when the mouse moves over it)
 
-			if (isOverRestartButton)
+/* 			if (isOverRestartButton)
 				g.drawImage(restart1Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
 			else
-				g.drawImage(restart2Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
+				g.drawImage(restart2Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null); */
 
 
 			// draw the quit button (an actual image that changes when the mouse moves over it)
@@ -305,6 +383,28 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		
 		}
 	
+	}
+
+	private void drawTutorial (Graphics g) {
+
+		Font newFont;
+	
+		newFont = new Font ("TimesRoman", Font.BOLD, 25);
+		g.setFont(newFont);		// set this as font for text
+		
+		g.setColor(Color.WHITE);
+		
+		if(getLevel() == 1){
+			g.drawString("     MOVEMENT", 200, 300);
+			g.drawString("Left - Right Arrow", 200, 350);
+
+			g.drawString("   JUMP", 600, 300);
+			g.drawString("Up Arrow", 600, 350);
+
+			g.drawString(" SHOOT", 900, 300);
+			g.drawString("Spacebar", 900, 350);
+		}
+
 	}
 
 
@@ -327,6 +427,12 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			gameThread.start();	 		
 
 		}
+	}
+
+
+	public void endLevel() {
+		level = level + 1;
+		levelChange = true;
 	}
 
 
@@ -382,14 +488,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			tileMap.jump();
 			soundManager.playSound ("jump", false);
 		}
-/* 		if (spacePressed && leftPressed) {
-			tileMap.jumpLeft();
-			soundManager.playSound ("jump", false);
-		}
-		if (spacePressed && rightPressed) {
-			tileMap.jumpRight();
-			soundManager.playSound ("jump", false);
-		} */
 
 	}
 
@@ -460,10 +558,10 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	private void testMousePress(int x, int y) {
 
-		if (isOverRestartButton) {			// mouse click on Stop button
+/* 		if (isOverRestartButton) {			// mouse click on Stop button
 			isPaused = false;
-		}
-		else if (isOverPauseButton) {		// mouse click on Pause button
+		} */
+		if (isOverPauseButton) {		// mouse click on Pause button
 			isPaused = !isPaused;     	// toggle pausing
 		}
 		else if (isOverQuitButton) {		// mouse click on Quit button
@@ -480,7 +578,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private void testMouseMove(int x, int y) { 
 		if (isRunning) {
 			isOverPauseButton = pauseButtonArea.contains(x,y) ? true : false;
-			isOverRestartButton = restartButtonArea.contains(x,y) ? true : false;
 			isOverQuitButton = quitButtonArea.contains(x,y) ? true : false;
 		}
 	}
