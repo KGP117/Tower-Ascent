@@ -6,8 +6,8 @@ import java.awt.geom.Rectangle2D;
 
 public class Player {			
 
-	private static final int XSIZE = 60;		// width of the image
-	private static final int YSIZE = 100;		// height of the image
+	private static final int XSIZE = 70;		// width of the image
+	private static final int YSIZE = 80;		// height of the image
 
    	private static final int DX = 8;	// amount of X pixels to move in one keystroke
    	private static final int DY = 32;	// amount of Y pixels to move in one keystroke
@@ -34,11 +34,16 @@ public class Player {
    	private int timeElapsed;
    	private int startY;
 
+	private int direction;
    	private boolean goingUp;
    	private boolean goingDown;
 
    	private boolean inAir;
    	private int initialVelocity;
+
+	private int lives;
+	private int numCoins;
+	private int score;
 
 	int time, timeChange;				// to control when the image is grayed
 	boolean originalImage, grayImage;
@@ -55,6 +60,8 @@ public class Player {
       	goingUp = goingDown = false;
       	inAir = false;
 
+		lives = 3;
+
       	playerLeftImage = ImageManager.loadImage("images/playerLeft.gif");
       	playerRightImage = ImageManager.loadImage("images/playerRight.gif");
       	playerImage = playerRightImage;
@@ -64,27 +71,27 @@ public class Player {
 		originalImage = true;
 		grayImage = false;
 
-		Image playerLeft1 = ImageManager.loadImage("images/player1_left.png");
+		//Image playerLeft1 = ImageManager.loadImage("images/player1_left.png");
         Image playerLeft2 = ImageManager.loadImage("images/player2_left.png");
         Image playerLeft3 = ImageManager.loadImage("images/player3_left.png");
         Image playerLeft4 = ImageManager.loadImage("images/player4_left.png");
 
         playerLeftAnim = new Animation(true);
 
-        playerLeftAnim.addFrame(playerLeft1, 100);
+        //playerLeftAnim.addFrame(playerLeft1, 100);
         playerLeftAnim.addFrame(playerLeft2, 100);
         playerLeftAnim.addFrame(playerLeft3, 100);
         playerLeftAnim.addFrame(playerLeft4, 100);
 
 
-		Image playerRight1 = ImageManager.loadImage("images/player1_right.png");
+		//Image playerRight1 = ImageManager.loadImage("images/player1_right.png");
         Image playerRight2 = ImageManager.loadImage("images/player2_right.png");
         Image playerRight3 = ImageManager.loadImage("images/player3_right.png");
         Image playerRight4 = ImageManager.loadImage("images/player4_right.png");
 
         playerRightAnim = new Animation(true);
 
-        playerRightAnim.addFrame(playerRight1, 100);
+        //playerRightAnim.addFrame(playerRight1, 100);
         playerRightAnim.addFrame(playerRight2, 100);
         playerRightAnim.addFrame(playerRight3, 100);
         playerRightAnim.addFrame(playerRight4, 100);
@@ -275,6 +282,8 @@ public class Player {
 				fall();
 			}
       	}
+
+		this.direction = direction;
    	}
 
 
@@ -326,7 +335,7 @@ public class Player {
    	}
 
 
-   	public void update () {
+   	public void update (int direction, boolean isJumping) {
       	
 		int distance = 0;
       	int newY = 0;
@@ -380,8 +389,48 @@ public class Player {
 					y = newY;
 				}
 			}
+
+			if (collidesWithTileDown (x, newY)!= null){
+				fall();
+			}
       	}
+
+		
+		if (direction == 1){
+            
+            if (jumping){
+                playerJumpLeftAnim.update();
+            }
+			playerLeftAnim.update();
+        }
+
+        if (direction == 2){
+            
+            if (jumping){
+            	playerJumpRightAnim.update();
+            }
+			playerRightAnim.update();
+        }
+
+		if (direction == 3){
+			playerJumpLeftAnim.update();
+            playerJumpRightAnim.update();
+        }
    	}
+
+
+	public void changeDirection(){
+        
+        if (direction == 1) {
+            playerLeftAnim.stop();
+            playerRightAnim.start();
+            direction = 2;
+        } else if (direction == 2) {
+            playerRightAnim.stop();
+            playerLeftAnim.start();
+            direction = 1;
+		}
+    }
 
 
    	public void moveUp () {
@@ -392,25 +441,31 @@ public class Player {
    	}
 
 	
-	public void draw (Graphics2D g2, int direction, boolean isJumping) {
+	public void draw (Graphics2D g2, int offSetX, int direction, boolean isJumping) {
         
         if (direction == 1){
             
-            if (isJumping){
-                g2.drawImage(playerJumpLeftAnim.getImage(), x, y, XSIZE, YSIZE, null);
+            if (jumping){
+                g2.drawImage(playerJumpLeftAnim.getImage(), x+offSetX, y, XSIZE, YSIZE, null);
             }
-
-			g2.drawImage(playerLeftAnim.getImage(), x, y, XSIZE, YSIZE, null);
+			else {
+				g2.drawImage(playerLeftAnim.getImage(), x+offSetX, y, XSIZE, YSIZE, null);
+			}
         }
 
         if (direction == 2){
             
-            if (isJumping){
-                g2.drawImage(playerJumpRightAnim.getImage(), x, y, XSIZE, YSIZE, null);
+            if (jumping){
+                g2.drawImage(playerJumpRightAnim.getImage(), x+offSetX, y, XSIZE, YSIZE, null);
             }
-
-			g2.drawImage(playerRightAnim.getImage(), x, y, XSIZE, YSIZE, null);
+			else {
+				g2.drawImage(playerRightAnim.getImage(), x+offSetX, y, XSIZE, YSIZE, null);
+			}
         }
+
+		if (direction == 3){
+			g2.drawImage(playerJumpRightAnim.getImage(), x+offSetX, y, XSIZE, YSIZE, null);
+		}
 	}
 
 
@@ -418,20 +473,34 @@ public class Player {
 		
         if (direction == 1){
             
-            if (isJumping){
-                g2.drawImage(playerJumpLeftAnim.getImage(), x, y, XSIZE, YSIZE, null);
+            if (jumping){
+				playerLeftAnim.stop();
+				playerRightAnim.stop();
+				playerJumpRightAnim.stop();
+                playerJumpLeftAnim.start();
             }
-
-			g2.drawImage(playerLeftAnim.getImage(), x, y, XSIZE, YSIZE, null);
+			else {
+				playerRightAnim.stop();
+				playerJumpRightAnim.stop();
+				playerJumpLeftAnim.stop();
+				playerLeftAnim.start();
+			}
         }
 
         if (direction == 2){
             
-            if (isJumping){
-                g2.drawImage(playerJumpRightAnim.getImage(), x, y, XSIZE, YSIZE, null);
+            if (jumping){
+				playerLeftAnim.stop();
+				playerRightAnim.stop();
+                playerJumpLeftAnim.stop();
+            	playerJumpRightAnim.start();
             }
-
-			g2.drawImage(playerRightAnim.getImage(), x, y, XSIZE, YSIZE, null);
+			else{
+				playerLeftAnim.stop();
+				playerJumpRightAnim.stop();
+				playerJumpLeftAnim.stop();
+				playerRightAnim.start();
+			}
         }
 	}
 
@@ -459,6 +528,38 @@ public class Player {
    	public Image getImage() {
       	return playerImage;
    	}
+
+
+	public int getDirection(){
+		if (direction == 0){
+			return 2;
+		}
+
+		return direction;
+	}
+
+	public void minusLive(){
+		lives = lives - 1;
+	}
+
+	public int getLives(){
+		return lives;
+	}
+
+	public void addCoin(int coin){
+		numCoins = numCoins + coin;
+	}
+
+	public int getCoins(){
+		return numCoins;
+	}
+
+	public int getScore(){
+
+		score = numCoins * 100;
+
+		return score;
+	}
 
 
 	public Rectangle2D.Double getBoundingRectangle() {

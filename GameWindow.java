@@ -32,6 +32,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private Image fullHeart;
 	private Image emptyHeart;
 
+	private boolean bossMusic;
+
 	private volatile boolean isOverPauseButton = false;
 	private Rectangle pauseButtonArea;		// used by the pause 'button'
 	private volatile boolean isPaused = false;
@@ -59,6 +61,9 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private boolean levelChange;
 	private int level;
 	private boolean gameOver;
+
+	private int totalScore;
+	private int totalLives;
 	
 
 	public GameWindow() {
@@ -91,6 +96,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 		level = 1;
 		levelChange = false;
+		bossMusic = false;
 
 		startGame();
 	}
@@ -146,9 +152,21 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	public void gameUpdate () {
 		
+		Graphics2D imageContext = (Graphics2D) image.getGraphics();
+
 		tileMap.update();
 
+		if (!bossMusic){
+			if (tileMap.getPlayerX() >= 4500){
+				soundManager.stopSound("background");
+				soundManager.playSound ("boss", true);
+				bossMusic = true;
+			}
+		}
+
+
 		if (levelChange) {
+			totalScore = totalScore + tileMap.getScore();
 			levelChange = false;
 			tileManager = new TileMapManager (this);
 
@@ -156,47 +174,11 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 				String filename = "maps/map" + level + ".txt";
 				tileMap = tileManager.loadMap(filename);
 			}
-			catch (Exception e) {		// no more maps: terminate game
-				gameOver = true;
-				isPaused = !isPaused;
-				renderGameOverScreen();
-				//System.exit(0);
+			catch (Exception e) {		// no more maps: ends the game
+				gameOver(imageContext);
 				return;
 			}
 		}
-	}
-
-	private void renderGameOverScreen() {
-
-		Graphics2D imageContext = (Graphics2D) image.getGraphics();
-
-		tileMap.draw(imageContext);
-		drawButtons(imageContext);			// draw the buttons
-		drawPauseInfo(imageContext);
-		drawLives(imageContext);			// draw the player lives
-		drawScore(imageContext);			// draw the current score
-		drawTutorial(imageContext);
-		drawGameOver(imageContext);
-
-		Graphics2D g2 = (Graphics2D) gScr;
-		g2.drawImage(image, 0, 0, pWidth, pHeight, null);
-
-		imageContext.dispose();
-		g2.dispose();
-	}
-
-
-	private void drawGameOver(Graphics2D g) {
-
-		Font newFont;
-	
-		newFont = new Font ("TimesRoman", Font.BOLD, 15);
-		g.setFont(newFont);		// set this as font for text
-		
-		g.setColor(Color.WHITE);
-		
-		g.drawString("Gave Over", 100, 200);
-		g.drawString("Esc", 10, 30);
 	}
 
 
@@ -296,19 +278,21 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 		int leftOffset = (pWidth / 2) - (buttonWidth / 2) - 200;
 		int topOffset = (pHeight / 2) - (buttonHeight / 2);
-		pauseButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
+		pauseButtonArea = new Rectangle(leftOffset+80, topOffset, buttonWidth, buttonHeight);
 
 		leftOffset = leftOffset + 200;
 		//restartButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
 
 		leftOffset = leftOffset + 200;
-		quitButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
+		quitButtonArea = new Rectangle(leftOffset-80, topOffset, buttonWidth, buttonHeight);
 	}
 
 
 	private void drawLives (Graphics g) {
 
 		Font newFont;
+
+		Graphics2D imageContext = (Graphics2D) image.getGraphics();
 
 		newFont = new Font ("TimesRoman", Font.BOLD, 25);
 		g.setFont(newFont);		// set this as font for text
@@ -319,22 +303,48 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		
 		g.drawString("SCORE", 1000, 40);
 
-		g.drawImage(fullHeart, 50, 50, 50, 50, null);
-		g.drawImage(fullHeart, 120, 50, 50, 50, null);
-		g.drawImage(fullHeart, 190, 50, 50, 50, null);
+		if (tileMap.getPlayerLives() == 3){
+			g.drawImage(fullHeart, 50, 50, 50, 50, null);
+			g.drawImage(fullHeart, 120, 50, 50, 50, null);
+			g.drawImage(fullHeart, 190, 50, 50, 50, null);
+		}
+		else
+		if (tileMap.getPlayerLives() == 2){
+			g.drawImage(fullHeart, 50, 50, 50, 50, null);
+			g.drawImage(fullHeart, 120, 50, 50, 50, null);
+			g.drawImage(emptyHeart, 190, 50, 50, 50, null);
+		}
+		else
+		if (tileMap.getPlayerLives() == 1){
+			g.drawImage(fullHeart, 50, 50, 50, 50, null);
+			g.drawImage(emptyHeart, 120, 50, 50, 50, null);
+			g.drawImage(emptyHeart, 190, 50, 50, 50, null);
+		}
+		else
+		if (tileMap.getPlayerLives() <= 0){
+			g.drawImage(emptyHeart, 50, 50, 50, 50, null);
+			g.drawImage(emptyHeart, 120, 50, 50, 50, null);
+			g.drawImage(emptyHeart, 190, 50, 50, 50, null);
+
+			isPaused = true;
+
+			gameOver(imageContext);
+		}
+
 	}
 
 
 	private void drawScore (Graphics g) {
 
 		Font newFont;
-	
+
 		newFont = new Font ("TimesRoman", Font.BOLD, 25);
 		g.setFont(newFont);		// set this as font for text
 		
 		g.setColor(Color.WHITE);
 		
 		g.drawString("SCORE", 1000, 40);
+		g.drawString(Integer.toString(totalScore), 1000, 80);
 	}
 
 
@@ -357,8 +367,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		// buttons appear when the game is paused
 
 		if (isPaused == true){
-
-			// draw the pause button (an actual image that changes when the mouse moves over it)
 
 			if (isOverPauseButton)
 				g.drawImage(pause1Image, pauseButtonArea.x, pauseButtonArea.y, buttonWidth, buttonHeight, null);
@@ -395,14 +403,14 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		g.setColor(Color.WHITE);
 		
 		if(getLevel() == 1){
-			g.drawString("     MOVEMENT", 200, 300);
-			g.drawString("Left - Right Arrow", 200, 350);
+			g.drawString("     MOVEMENT", 200, 200);
+			g.drawString("Left - Right Arrow", 200, 250);
 
-			g.drawString("   JUMP", 600, 300);
-			g.drawString("Up Arrow", 600, 350);
+			g.drawString("   JUMP", 600, 200);
+			g.drawString("Up Arrow", 600, 250);
 
-			g.drawString(" SHOOT", 900, 300);
-			g.drawString("Spacebar", 900, 350);
+			g.drawString(" SHOOT", 900, 200);
+			g.drawString("Spacebar", 900, 250);
 		}
 
 	}
@@ -410,6 +418,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	private void startGame() { 
 		if (gameThread == null) {
+			soundManager.playSound("intro", false);
 			soundManager.playSound ("background", true);
 
 		 	tileManager = new TileMapManager (this);
@@ -438,20 +447,36 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	// displays a message to the screen when the user stops the game
 
-	private void gameOverMessage(Graphics g) {
+	private void gameOver(Graphics g) {
 		
+		soundManager.stopSound("background");
+
+		if (tileMap.getPlayerLives() > 0){
+			soundManager.playSound("win", false);
+		}
+		else {
+			soundManager.playSound("lose", false);
+		}
+
+		gameOver = true;
+		isPaused = true;
+
+
+
 		Font font = new Font("SansSerif", Font.BOLD, 24);
 		FontMetrics metrics = this.getFontMetrics(font);
 
-		String msg = "Game Over. Thanks for playing!";
+		String msg1 = "GAME OVER";
+		String msg2 = "THANKS FOR PLAYING!";
 
-		int x = (pWidth - metrics.stringWidth(msg)) / 2; 
+		int x1 = (pWidth - metrics.stringWidth(msg1)) / 2;
+		int x2 = (pWidth - metrics.stringWidth(msg2)) / 2; 
 		int y = (pHeight - metrics.getHeight()) / 2;
 
-		g.setColor(Color.BLUE);
+		g.setColor(Color.WHITE);
 		g.setFont(font);
-		g.drawString(msg, x, y);
-
+		g.drawString(msg1, x1, y-150);
+		g.drawString(msg2, x2, y-100);
 	}
 
 
@@ -474,19 +499,23 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		 	return;						
 	 	}
 		else
- 		if (keyCode == KeyEvent.VK_LEFT) {
+ 		if ((keyCode == KeyEvent.VK_LEFT)  || (keyCode == KeyEvent.VK_A)){
 			leftPressed = true;
 			tileMap.moveLeft();
 		}
 		else
-		if (keyCode == KeyEvent.VK_RIGHT) {
+		if ((keyCode == KeyEvent.VK_RIGHT)  || (keyCode == KeyEvent.VK_D)){
 			rightPressed = true;
 			tileMap.moveRight();
 		}
-		if (keyCode == KeyEvent.VK_SPACE) {
+		if ((keyCode == KeyEvent.VK_UP) || (keyCode == KeyEvent.VK_W) || (keyCode == KeyEvent.VK_Z)){
 			spacePressed = true;
 			tileMap.jump();
 			soundManager.playSound ("jump", false);
+		}
+		if ((keyCode == KeyEvent.VK_SPACE) || (keyCode == KeyEvent.VK_X)){
+			tileMap.fireProjectile();
+			soundManager.playSound ("pew", false);
 		}
 
 	}

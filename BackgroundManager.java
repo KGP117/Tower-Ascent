@@ -16,15 +16,15 @@ import javax.swing.JFrame;
 
 public class BackgroundManager {
 
-	private String bgImages[] = {"images/background1.png"};
+	private String bgImages[] = {"images/background1.png", "images/clouds.png"};
 	private String bgImages1[] = {"images/background2.png"};
 	private String bgImages2[] = {"images/background3.jpeg"};
 
-  	private int moveAmountX[] = {0};  
+  	private int moveAmountX[] = {10, 1};  
 						// pixel amounts to move each background left or right
      					// a move amount of 0 makes a background stationary
 
-  	private int moveAmountY[] = {50};  
+  	private int moveAmountY[] = {50, 0};  
 						// pixel amounts to move each background left or right
      					// a move amount of 0 makes a background stationary	
 
@@ -48,10 +48,10 @@ public class BackgroundManager {
     	for (int i = 0; i < numBackgrounds; i++) {
        		backgrounds[i] = new Background(window, bgImages[i], moveAmountX[i], moveAmountY[i]);
     	}
-		for (int i = 0; i < numBackgrounds; i++) {
+		for (int i = 0; i < 1; i++) {
 			backgrounds1[i] = new Background(window, bgImages1[i], moveAmountX[i], moveAmountY[i]);
 		}
-		for (int i = 0; i < numBackgrounds; i++) {
+		for (int i = 0; i < 1; i++) {
 			backgrounds2[i] = new Background(window, bgImages2[i], moveAmountX[i], moveAmountY[i]);
 		}
   	} 
@@ -89,11 +89,11 @@ public class BackgroundManager {
       		backgrounds[i].draw(g2);
 		}
 		if (level == 2){
-			for (int i=0; i < numBackgrounds; i++)
+			for (int i=0; i < 1; i++)
       		backgrounds1[i].draw(g2);
 		}
 		if (level == 3){
-			for (int i=0; i < numBackgrounds; i++)
+			for (int i=0; i < 1; i++)
       		backgrounds2[i].draw(g2);
 		}
   	}

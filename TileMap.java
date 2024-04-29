@@ -20,8 +20,21 @@ public class TileMap {
     private int offsetY;
 
     private Player player;
-    private Coin coin = null;
-    private Enemy enemy;
+
+    private PlayerProjectile projectile;
+    private boolean projectileFired;
+
+    private Coin coin1;
+    private Coin coin2;
+    private Coin coin3;
+    
+    private GroundEnemy enemy1;
+    private FlyingEnemy enemy2;
+    private BossEnemy enemy3;
+
+    GroundEnemy[] groundEnemies = null;
+    FlyingEnemy[] flyingEnemies = null;
+    BossEnemy[] BossEnemies = null;
 
     BackgroundManager bgManager;
 
@@ -50,8 +63,28 @@ public class TileMap {
         bgManager = new BackgroundManager (window, 12);
         tiles = new Image[mapWidth][mapHeight];
         player = new Player (window, this, bgManager);
-        coin = new Coin (player);
-        enemy = new Enemy (player);
+        projectile = new PlayerProjectile (player, groundEnemies, flyingEnemies, BossEnemies);
+        
+
+        if (((GameWindow) window).getLevel() == 1){
+            coin1 = new Coin (player, 1000, 600);
+        }
+
+        else
+        if (((GameWindow) window).getLevel() == 2){
+            coin2 = new Coin (player, 100, 100);
+            enemy1 = new GroundEnemy (player, 800, screenHeight-TILE_SIZE-115);
+        }
+
+        else 
+        if (((GameWindow) window).getLevel() == 3){
+            coin2 = new Coin (player, 6100, 350);
+            enemy1 = new GroundEnemy (player, 1600, screenHeight-TILE_SIZE-175);
+            enemy2 = new FlyingEnemy(player, 3300, 300);
+            enemy3 = new BossEnemy(player, 5700, 375);
+        }
+        
+
 
         Image playerImage = player.getImage();
         int playerHeight = playerImage.getHeight(null);
@@ -65,8 +98,26 @@ public class TileMap {
         player.setY(y);
 
 
-        coin.start();
-        enemy.start(2);
+        player.start(player.getDirection(), player.isInAir());
+        
+        
+        if (((GameWindow) window).getLevel() == 1){
+            coin1.start();
+        }
+
+        else
+        if (((GameWindow) window).getLevel() == 2){
+            coin2.start();
+            enemy1.start(2);
+        }
+
+        else 
+        if (((GameWindow) window).getLevel() == 3){
+            coin2.start();
+            enemy1.start(2);
+            enemy2.start(1);
+            enemy3.start(1);
+        }
     }
 
 
@@ -201,31 +252,30 @@ public class TileMap {
                 }
             }
         }
-
-
-        // draw player
-
-        g2.drawImage(player.getImage(),
-            Math.round(player.getX()) + offsetX,
-            Math.round(player.getY()), //+ offsetY,
-            null); 
-
+        
+        player.draw(g2, offsetX, player.getDirection(), player.isInAir());
 
         
+        if (projectileFired){
+            projectile.draw(g2, 2, offsetX);
+        }
+
         if (((GameWindow) window).getLevel() == 1){
-            coin.draw(g2, offsetX);
+            coin1.draw(g2, offsetX);
         }
 
         else
         if (((GameWindow) window).getLevel() == 2){
-            coin.draw(g2, offsetX);
-            enemy.draw(g2, offsetX);
+            coin2.draw(g2, offsetX);
+            enemy1.draw(g2, offsetX);
         }
 
         else 
         if (((GameWindow) window).getLevel() == 3){
-            coin.draw(g2, offsetX);
-            enemy.draw(g2, offsetX);
+            coin2.draw(g2, offsetX);
+            enemy1.draw(g2, offsetX);
+            enemy2.draw(g2, offsetX);
+            enemy3.draw(g2, offsetX);
         }
 
     }
@@ -235,25 +285,131 @@ public class TileMap {
         player.move(1);
     }
 
-
     public void moveRight() {
         player.move(2);
     }
 
-
     public void jump() {
-        player.move(3);
+        //if(!player.isInAir()){
+            player.move(3);
+        //}
+    }
+
+    public void fireProjectile() {
+        projectileFired = true;
+    }
+
+
+    public int getPlayerLives(){
+        return player.getLives();
+    }
+
+    public int getScore(){
+        return player.getScore();
+    }
+
+    public int getPlayerX(){
+        return player.getX();
     }
 
 
     public void update() {
-	    player.update();
-        coin.update();
-        enemy.update();
 
-        if (coin.collidesWithPlayer()) {
-            ((GameWindow) window).endLevel();
-            return;
+	    player.update(player.getDirection(), player.isInAir());
+
+        projectile.update();
+
+        if (((GameWindow) window).getLevel() == 1){
+            coin1.update();
+
+            if (coin1.collidesWithPlayer()) {
+                player.addCoin(1);
+                ((GameWindow) window).endLevel();
+            }
+        }
+
+        else
+        if (((GameWindow) window).getLevel() == 2){
+            coin2.update();
+            enemy1.update();
+
+            if (coin2.collidesWithPlayer()) {
+                player.addCoin(1);
+                ((GameWindow) window).endLevel();
+            }
+
+            if (enemy1.collidesWithPlayer()) {
+            
+                player.minusLive();
+                
+                if (player.getX() < enemy1.getX()){
+                    player.setX(player.getX()-100);
+                    player.update(player.getDirection(), player.isInAir());
+                }
+                else
+                if (player.getX() > enemy1.getX()){
+                    player.setX(player.getX()+100);
+                    player.update(player.getDirection(), player.isInAir());
+                }
+            }
+        }
+
+        else 
+        if (((GameWindow) window).getLevel() == 3){
+            coin2.update();
+            enemy1.update();
+            enemy2.update();
+            enemy3.update();
+
+            if (coin2.collidesWithPlayer()) {
+                player.addCoin(1);
+                ((GameWindow) window).endLevel();
+            }
+
+            if (enemy1.collidesWithPlayer()) {
+            
+                player.minusLive();
+                
+                if (player.getX() < enemy1.getX()){
+                    player.setX(player.getX()-100);
+                    player.update(player.getDirection(), player.isInAir());
+                }
+                else
+                if (player.getX() > enemy1.getX()){
+                    player.setX(player.getX()+100);
+                    player.update(player.getDirection(), player.isInAir());
+                }
+            }
+            
+            if (enemy2.collidesWithPlayer()) {
+            
+                player.minusLive();
+                
+                if (player.getX() < enemy2.getX()){
+                    player.setX(player.getX()-100);
+                    player.update(player.getDirection(), player.isInAir());
+                }
+                else
+                if (player.getX() > enemy2.getX()){
+                    player.setX(player.getX()+100);
+                    player.update(player.getDirection(), player.isInAir());
+                }
+            }
+
+            if (enemy3.collidesWithPlayer()) {
+            
+                player.minusLive();
+                
+                if (player.getX() < enemy3.getX()){
+                    player.setX(player.getX()-100);
+                    player.update(player.getDirection(), player.isInAir());
+                }
+                else
+                if (player.getX() > enemy3.getX()){
+                    player.setX(player.getX()+100);
+                    player.update(player.getDirection(), player.isInAir());
+                }
+            }
         }
     }
 

@@ -22,10 +22,10 @@ public class Coin {
 
     // Sprite Constructor
 
-    public Coin (Player player) {
+    public Coin (Player player, int x, int y) {
 			
-		x = 700;
-		y = 600;
+		this.x = x;
+        this.y = y;
 		dx = 2;
 
 		this.player = player;
