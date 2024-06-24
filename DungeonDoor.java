@@ -3,12 +3,12 @@ import java.awt.geom.Rectangle2D;
 import java.awt.Image;
 
 
-public class Coin {
+public class DungeonDoor {
 
-	private static final int XSIZE = 50;		// width of the image
-	private static final int YSIZE = 50;		// height of the image
+	private static final int XSIZE = 80;		// width of the image
+	private static final int YSIZE = 100;		// height of the image
 
-    private Animation animCoin;
+    private Animation animDoor;
 
     private int x;          // x-position of sprite
     private int y;          // y-position of sprite
@@ -21,10 +21,11 @@ public class Coin {
 
     // Sprite Constructor
 
-    public Coin (Player player, int x, int y) {
+    public DungeonDoor (Player player, int x, int y) {
 			
 		this.x = x;
         this.y = y;
+
 		this.player = player;
 
 		time = 0;				// range is 0 to 10
@@ -32,38 +33,24 @@ public class Coin {
 		originalImage = true;
 		grayImage = false;
 
-        Image coin1 = ImageManager.loadImage("images/object/coin/coin1.png");
-        Image coin2 = ImageManager.loadImage("images/object/coin/coin2.png");
-        Image coin3 = ImageManager.loadImage("images/object/coin/coin3.png");
+        Image door = ImageManager.loadImage("images/object/door/dungeon_door.png");
 
-        animCoin = new Animation(true);
+        animDoor = new Animation(true);
 
-        animCoin.addFrame(coin1, 100);
-        animCoin.addFrame(coin2, 100);
-        animCoin.addFrame(coin3, 100);
+        animDoor.addFrame(door, 100);
         
     }
 
     public void draw (Graphics2D g2, int offSetX) {
-        if (!animCoin.isStillActive()) {
+        if (!animDoor.isStillActive()) {
 			return;
 		}
-		g2.drawImage(animCoin.getImage(), x + offSetX, y, XSIZE, YSIZE, null);
+		g2.drawImage(animDoor.getImage(), x + offSetX, y, XSIZE, YSIZE, null);
 	}
-
 
     public void start() {
-		animCoin.start();
+		animDoor.start();
 	}
-
-    public void stop() {
-        animCoin.stop();
-    }
-
-    public boolean isActive(){
-        return animCoin.isStillActive();
-    }
-
 
     public boolean collidesWithPlayer () {
 		Rectangle2D.Double myRect = getBoundingRectangle();
@@ -76,17 +63,16 @@ public class Coin {
 			return false;
 	}
 
-
     public Rectangle2D.Double getBoundingRectangle() {
 		return new Rectangle2D.Double (x, y, XSIZE, YSIZE);
 	}
 
-
 	public void update() {		
-        if (!animCoin.isStillActive()) {
+        if (!animDoor.isStillActive()) {
 			return;
 		}
-		animCoin.update();
+		animDoor.update();
+
 	}
 
 

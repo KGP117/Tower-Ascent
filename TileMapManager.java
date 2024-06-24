@@ -2,56 +2,48 @@ import java.awt.*;
 import java.io.*;
 import java.util.ArrayList;
 import javax.swing.JFrame;
-import javax.swing.ImageIcon;
+import javax.imageio.ImageIO;
 
-
-/**
-    The ResourceManager class loads and manages tile Images and
-    "host" Sprites used in the game. Game Sprites are cloned from
-    "host" Sprites.
-*/
 
 public class TileMapManager {
 
     private ArrayList<Image> tiles;
     private JFrame window;
 
+
     public TileMapManager(JFrame window) {
-	this.window = window;
+	    this.window = window;
 
         loadTileImages();
     }
 
 
-    public TileMap loadMap(String filename)
-        throws IOException
-{
+    public TileMap loadMap(String filename) throws IOException {
+        
         ArrayList<String> lines = new ArrayList<String>();
         int mapWidth = 0;
         int mapHeight = 0;
 
-        // read every line in the text file into the list
+        InputStream inputStream = getClass().getResourceAsStream(filename);
+        if (inputStream == null) {
+            throw new FileNotFoundException("Map file not found: " + filename);
+        }
 
-        BufferedReader reader = new BufferedReader(
-        
-        new FileReader(filename));
+        BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream));
 
         while (true) {
             String line = reader.readLine();
-            // no more lines to read
             if (line == null) {
                 reader.close();
                 break;
             }
 
-            // add every line except for comments
             if (!line.startsWith("#")) {
                 lines.add(line);
                 mapWidth = Math.max(mapWidth, line.length());
             }
         }
 
-        // parse the lines to create a TileMap
         mapHeight = lines.size();
 
         TileMap newMap = new TileMap(window, mapWidth, mapHeight);
@@ -62,12 +54,10 @@ public class TileMapManager {
             for (int x=0; x<line.length(); x++) {
                 char ch = line.charAt(x);
 
-                // check if the char represents tile A, B, C etc.
                 int tile = ch - 'A';
                 if (tile >= 0 && tile < tiles.size()) {
                     newMap.setTile(x, y, tiles.get(tile));
                 }
-
             }
         }
 
@@ -76,31 +66,32 @@ public class TileMapManager {
 
 
 
-    // -----------------------------------------------------------
-    // code for loading sprites and images
-    // -----------------------------------------------------------
-
-
     public void loadTileImages() {
-        // keep looking for tile A,B,C, etc. this makes it
-        // easy to drop new tiles in the images/ folder
-
-	File file;
-
         tiles = new ArrayList<Image>();
         char ch = 'A';
         
         while (true) {
-            String filename = "images/tile_" + ch + ".png";
-	        file = new File(filename);
+            String filename = "/images/tiles/Tile_" + ch + ".png";
+            InputStream inputStream = getClass().getResourceAsStream(filename);
             
-            if (!file.exists()) {
+            if (inputStream == null) {
+                System.err.println("Tile image not found: " + filename);
                 break;
-            }
-            else{
-                Image tileImage = new ImageIcon(filename).getImage();
-                tiles.add(tileImage);
-                ch++;
+            } else {
+                try {
+                    Image tileImage = ImageIO.read(inputStream);
+                    tiles.add(tileImage);
+                    ch++;
+                } catch (IOException e) {
+                    e.printStackTrace();
+                    break;
+                } finally {
+                    try {
+                        inputStream.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
             }
         }
     }

@@ -1,126 +1,117 @@
-import javax.swing.*;			// need this for GUI objects
-import java.awt.*;			// need this for certain AWT classes
-import java.awt.image.BufferedImage;
+import java.awt.*;
+import javax.swing.*;
 import java.awt.event.*;
-import java.awt.image.BufferStrategy;	// need this to implement page flipping
+import java.awt.image.BufferedImage;
+import java.awt.image.BufferStrategy;
 
 
-public class GameWindow extends JFrame implements Runnable, KeyListener, MouseListener, MouseMotionListener
-{
-  	private static final int NUM_BUFFERS = 2;	// used for page flipping
+public class GameWindow extends JFrame implements Runnable, KeyListener, MouseListener, MouseMotionListener {
 
-	private int pWidth;				// width of the screen
-	private int pHeight;     		// height of screen
+	private static final int NUM_BUFFERS = 2;
 
-	private int buttonWidth = 180;		// width of a button
-	private int buttonHeight = 50;		// height of a button
-
-	private Thread gameThread = null;            	// the thread that controls the game
-	private volatile boolean isRunning = false;    	// used to stop the game thread
-
-	private BufferedImage image;			// drawing area for each frame
-
-	private Image pause1Image;			// first image for resume button
-	private Image pause2Image;			// second image for resume button
-
-	private Image restart1Image;		// first image for restart button
-	private Image restart2Image;		// second image for restart button
-
-	private Image quit1Image;			// first image for quit button
-	private Image quit2Image;			// second image for quit button
-
-	private Image fullHeart;
-	private Image emptyHeart;
-
-	private boolean bossMusic;
-
-	private volatile boolean isOverPauseButton = false;
-	private Rectangle pauseButtonArea;		// used by the pause 'button'
+	// Thread and State Control
+	private Thread gameThread = null;
+	private volatile boolean isRunning = false;
 	private volatile boolean isPaused = false;
-	
-/* 	private volatile boolean isOverRestartButton = false;
-	private Rectangle restartButtonArea;		// used by the restart 'button' */
-
+	private volatile boolean isOverPauseButton = false;
+	private volatile boolean isOverRestartButton = false;
 	private volatile boolean isOverQuitButton = false;
-	private Rectangle quitButtonArea;		// used by the quit button
-
-	private boolean finishedOff = false;		// used when the game terminates
-   
-	private GraphicsDevice device;			// used for full-screen exclusive mode 
+	
+	// Graphics and Display
 	private Graphics gScr;
+	private GraphicsDevice device;
 	private BufferStrategy bufferStrategy;
-
-	boolean rightPressed = false;
-	boolean leftPressed = false;
-	boolean spacePressed = false;
-
+	private BufferedImage image;
+	private int pWidth, pHeight;
+	
+	// UI Elements
+	private Rectangle pauseButtonArea, restartButtonArea, quitButtonArea;
+	private Image pause1Image, pause2Image;
+	private Image restart1Image, restart2Image;
+	private Image quit1Image, quit2Image;
+	private Image fullHeart, emptyHeart;
+	private Image movementKeys, jumpKeys, attackKeys;
+	private boolean showMovementKeys = false;
+	private boolean showJumpKeys = false;
+	private boolean showAttackKeys = false;
+	
+	// Game State
+	private boolean bossMusicSound = false;
+	private boolean walkSound = false;
+	private boolean fullscreen = false;
+	private boolean finishedOff = false;
+	private boolean levelChange = false;
+	private int level;
+	private int totalScore;
+	private boolean leftPressed = false;
+	private boolean rightPressed = false;
+	private boolean upPressed = false;
+	private boolean attackPressed = false;
+	
+	// Managers
 	SoundManager soundManager;
 	TileMapManager tileManager;
-	TileMap	tileMap;
+	TileMap tileMap;	
 
-	private boolean levelChange;
-	private int level;
-	private boolean gameOver;
 
-	private int totalScore;
-	private int totalLives;
-	
+
+	// GameWindow Constructor
 
 	public GameWindow() {
  
 		super("Tower Ascent");
 
 		initFullScreen();
-
-		pause1Image = ImageManager.loadImage("images/Pause1.png");
-		pause2Image = ImageManager.loadImage("images/Pause2.png");
-
-		restart1Image = ImageManager.loadImage("images/Restart1.png");
-		restart2Image = ImageManager.loadImage("images/Restart2.png");
-
-		quit1Image = ImageManager.loadImage("images/Quit1.png");
-		quit2Image = ImageManager.loadImage("images/Quit2.png");
-
-		fullHeart = ImageManager.loadImage("images/full_heart.png");
-		emptyHeart = ImageManager.loadImage("images/empty_heart.png");
-
-
-		setButtonAreas();
-
+		//initWindowedMode();
+		loadImages();
 		addKeyListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);
-
-		soundManager = SoundManager.getInstance();
-		image = new BufferedImage (pWidth, pHeight, BufferedImage.TYPE_INT_RGB);
-
-		level = 1;
-		levelChange = false;
-		bossMusic = false;
-
 		startGame();
 	}
 
 
-	// Implementation of Runnable interface
 
-	public void run () {
+	// Standard procedure to get into FSEM
+
+	private void initFullScreen() {
+
+		fullscreen = true;
+
+		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
+		device = ge.getDefaultScreenDevice();
+
+		setUndecorated(true);
+		setIgnoreRepaint(true);
+		setResizable(false);
 		
-		try {
-			isRunning = true;
-			while (isRunning) {
-				if (isPaused == false) {
-					gameUpdate();
-				}
-				screenUpdate();
-				Thread.sleep (60);
-			}
+		if (!device.isFullScreenSupported()) {
+			System.out.println("Full-screen exclusive mode not supported");
+			System.exit(0);
 		}
-		catch(InterruptedException e) {}
 
-		finishOff();
+		device.setFullScreenWindow(this);
+
+		pWidth = getBounds().width;
+		pHeight = getBounds().height;
+
+		try {
+			createBufferStrategy(NUM_BUFFERS);
+		}
+		catch (Exception e) {
+			System.out.println("Error while creating buffer strategy " + e); 
+			System.exit(0);
+		}
+
+		bufferStrategy = getBufferStrategy();
+
+		if (bufferStrategy == null) {
+			System.out.println("BufferStrategy is null");
+			System.exit(0);
+		}
 	}
 
+	
 
 	// Performs some tasks before closing the game
 
@@ -133,6 +124,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			System.exit(0);
 		}
 	}
+
 
 
 	// This method switches off full screen mode
@@ -148,43 +140,166 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
+
+	// Launch in Windowed Mode
+
+	private void initWindowedMode() {
+
+		pWidth = 1280;
+		pHeight = 720;
+
+        setSize(pWidth, pHeight);
+        setResizable(false);
+        setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        setLocationRelativeTo(null); // Center the window on the screen
+        setVisible(true);
+
+        createBufferStrategy(NUM_BUFFERS);
+        bufferStrategy = getBufferStrategy();
+
+        if (bufferStrategy == null) {
+            System.out.println("BufferStrategy is null");
+            System.exit(0);
+        }
+    }
+
+
+
+	// Loads all required UI Images
+
+	public void loadImages(){
+		pause1Image = ImageManager.loadImage("images/userInterface/pause/Pause1.png");
+		pause2Image = ImageManager.loadImage("images/userInterface/pause/Pause2.png");
+
+		restart1Image = ImageManager.loadImage("images/userInterface/restart/Restart1.png");
+		restart2Image = ImageManager.loadImage("images/userInterface/restart/Restart2.png");
+
+		quit1Image = ImageManager.loadImage("images/userInterface/quit/Quit1.png");
+		quit2Image = ImageManager.loadImage("images/userInterface/quit/Quit2.png");
+
+		fullHeart = ImageManager.loadImage("images/userInterface/lives/full_heart.png");
+		emptyHeart = ImageManager.loadImage("images/userInterface/lives/empty_heart.png");
+
+		movementKeys = ImageManager.loadImage("images/userInterface/keys/arrows.png");
+		jumpKeys = ImageManager.loadImage("images/userInterface/keys/space.png");
+		attackKeys = ImageManager.loadImage("images/userInterface/keys/z.png");
+	}
+
+
+
+	// Starts the game
+
+	private void startGame() { 
+
+		level = 1;
+		soundManager = SoundManager.getInstance();
+		image = new BufferedImage (pWidth, pHeight, BufferedImage.TYPE_INT_RGB);
+
+		if (gameThread == null) {
+			soundManager.playSound("intro", false);
+			soundManager.playSound ("background", true);
+
+		 	tileManager = new TileMapManager (this);
+
+			try {
+				tileMap = tileManager.loadMap("/maps/map1.txt");
+			}
+			
+			catch (Exception e) {
+				System.out.println(e);
+				System.exit(0);
+			}
+
+			gameThread = new Thread(this);
+			gameThread.start();	 		
+		}
+	}
+
+
+	
+	// Implementation of Runnable interface
+
+	public void run () {
+		
+		try {
+			isRunning = true;
+
+			while (isRunning) {
+				if (!isPaused) {
+					synchronized (this) {				
+						gameUpdate();
+					}
+				}
+				synchronized (this) {
+					screenUpdate();
+				}
+				Thread.sleep (60);
+			}
+		}
+		catch(InterruptedException e) {
+			e.printStackTrace();
+		}
+
+		if (fullscreen == true){
+			finishOff();
+		}
+	}
+
+
+
 	// Updates the game
 
 	public void gameUpdate () {
 		
-		Graphics2D imageContext = (Graphics2D) image.getGraphics();
+		Graphics2D imageContext = null;
 
-		tileMap.update();
-
-		if (!bossMusic){
-			if (tileMap.getPlayerX() >= 4500){
-				soundManager.stopSound("background");
-				soundManager.playSound ("boss", true);
-				bossMusic = true;
+		try {
+			imageContext = (Graphics2D) image.getGraphics();
+			tileMap.update();
+	
+			if (!bossMusicSound) {
+				if (tileMap.getPlayerX() >= 4500) {
+					soundManager.stopSound("background");
+					soundManager.playSound("boss", true);
+					bossMusicSound = true;
+				}
 			}
-		}
 
-
-		if (levelChange) {
-			totalScore = totalScore + tileMap.getScore();
-			levelChange = false;
-			tileManager = new TileMapManager (this);
-
-			try {
-				String filename = "maps/map" + level + ".txt";
-				tileMap = tileManager.loadMap(filename);
+			if ((rightPressed || leftPressed) && !tileMap.isPlayerInAir()) {
+				if (!walkSound) {
+					soundManager.playSound("walk", true);
+					walkSound = true;
+				}
 			}
-			catch (Exception e) {		// no more maps: ends the game
-				gameOver(imageContext);
-				return;
+			else {
+				soundManager.stopSound("walk");
+				walkSound = false;
+			}
+	
+			if (levelChange) {
+				totalScore = totalScore + tileMap.getScore();
+				levelChange = false;
+				tileManager = new TileMapManager(this);
+	
+				try {
+					String filename = "maps/map" + level + ".txt";
+					tileMap = tileManager.loadMap(filename);
+				} catch (Exception e) {
+					e.printStackTrace();
+					gameOver(imageContext);
+					return;
+				}
+			}
+		} catch (Exception e) {
+			e.printStackTrace();
+			isRunning = false;
+		} finally {
+			if (imageContext != null) {
+				imageContext.dispose();
 			}
 		}
 	}
 
-
-	int getLevel() {
-		return level;
-	}
 
 
 	// Updates the screen
@@ -201,7 +316,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			else
 				System.out.println("Contents of buffer lost.");
       
-			// Sync the display on some systems
 			Toolkit.getDefaultToolkit().sync();
 		}
 		
@@ -212,6 +326,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
+
 	// Draws the game objects
 
 	public void gameRender (Graphics gScr) {		
@@ -219,11 +334,10 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		Graphics2D imageContext = (Graphics2D) image.getGraphics();
 
 		tileMap.draw(imageContext);
-		drawButtons(imageContext);			// draw the buttons
-		drawPauseInfo(imageContext);
-		drawLives(imageContext);			// draw the player lives
-		drawScore(imageContext);			// draw the current score
-		drawTutorial(imageContext);
+		drawUIElements(imageContext);
+		drawLives(imageContext);
+		drawInputKeys(imageContext);
+		drawPauseButtons(imageContext);
 
 		Graphics2D g2 = (Graphics2D) gScr;
 		g2.drawImage(image, 0, 0, pWidth, pHeight, null);
@@ -233,138 +347,115 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
-	// Standard procedure to get into FSEM
 
-	private void initFullScreen() {
+	// Draws player lives
 
-		GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
-		device = ge.getDefaultScreenDevice();
+	private void drawUIElements (Graphics g) {
 
-		setUndecorated(true);	// no menu bar, borders, etc.
-		setIgnoreRepaint(true);	// turn off all paint events since doing active rendering
-		setResizable(false);	// screen cannot be resized
-		
-		if (!device.isFullScreenSupported()) {
-			System.out.println("Full-screen exclusive mode not supported");
-			System.exit(0);
-		}
-
-		device.setFullScreenWindow(this); // switch on full-screen exclusive mode
-
-		// we can now adjust the display modes, if we wish
-
-		pWidth = getBounds().width;
-		pHeight = getBounds().height;
-
-		try {
-			createBufferStrategy(NUM_BUFFERS);
-		}
-		catch (Exception e) {
-			System.out.println("Error while creating buffer strategy " + e); 
-			System.exit(0);
-		}
-
-		bufferStrategy = getBufferStrategy();
-	}
-
-
-	// Specify screen areas for the buttons and create bounding rectangles
-
-	private void setButtonAreas() {
-		
-		//  leftOffset is the distance of a button from the left side of the window.
-		//  topOffset is the distance of a button from the top of the window.
-		//  Buttons are placed in the middle of the window when the game is paused.
-
-		int leftOffset = (pWidth / 2) - (buttonWidth / 2) - 200;
-		int topOffset = (pHeight / 2) - (buttonHeight / 2);
-		pauseButtonArea = new Rectangle(leftOffset+80, topOffset, buttonWidth, buttonHeight);
-
-		leftOffset = leftOffset + 200;
-		//restartButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
-
-		leftOffset = leftOffset + 200;
-		quitButtonArea = new Rectangle(leftOffset-80, topOffset, buttonWidth, buttonHeight);
-	}
-
-
-	private void drawLives (Graphics g) {
-
-		Font newFont;
-
-		Graphics2D imageContext = (Graphics2D) image.getGraphics();
-
-		newFont = new Font ("TimesRoman", Font.BOLD, 25);
-		g.setFont(newFont);		// set this as font for text
+		Font newFont = new Font ("TimesRoman", Font.BOLD, 25);
+		g.setFont(newFont);
 		
 		g.setColor(Color.WHITE);
 		
 		g.drawString("LIVES", 108, 40);
-		
-		g.drawString("SCORE", 1000, 40);
+
+		g.drawString("LEVEL - " + Integer.toString(level), 600, 40);
+
+		g.drawString("SCORE", 1100, 40);
+		g.drawString(Integer.toString(totalScore + tileMap.getScore()), 1100, 80);
+
+
+		if (level == 1){
+			g.drawString(" MOVEMENT", 200, 200);
+			g.drawImage(movementKeys, 200, 210, 150, 100, null);
+
+			g.drawString("JUMP", 600, 200);
+			g.drawImage(jumpKeys, 560, 225, 150, 50, null);
+
+			g.drawString(" ATTACK", 900, 200);
+			g.drawImage(attackKeys, 930, 225, 50, 50, null);
+		}
+
+
+		newFont = new Font ("TimesRoman", Font.BOLD, 20);
+		g.setFont(newFont);
+
+		g.drawString("Input", 30, 700);
+
+		newFont = new Font ("TimesRoman", Font.BOLD, 15);
+		g.setFont(newFont);
+
+		g.drawString("Pause", 10, 20);
+		g.drawString("Esc", 10, 30);
+	}
+
+
+
+	// Draws player lives
+
+	private void drawLives (Graphics g) {
+
+		Graphics2D imageContext = (Graphics2D) image.getGraphics();
 
 		if (tileMap.getPlayerLives() == 3){
 			g.drawImage(fullHeart, 50, 50, 50, 50, null);
 			g.drawImage(fullHeart, 120, 50, 50, 50, null);
 			g.drawImage(fullHeart, 190, 50, 50, 50, null);
 		}
-		else
-		if (tileMap.getPlayerLives() == 2){
+		else if (tileMap.getPlayerLives() == 2){
 			g.drawImage(fullHeart, 50, 50, 50, 50, null);
 			g.drawImage(fullHeart, 120, 50, 50, 50, null);
 			g.drawImage(emptyHeart, 190, 50, 50, 50, null);
 		}
-		else
-		if (tileMap.getPlayerLives() == 1){
+		else if (tileMap.getPlayerLives() == 1){
 			g.drawImage(fullHeart, 50, 50, 50, 50, null);
 			g.drawImage(emptyHeart, 120, 50, 50, 50, null);
 			g.drawImage(emptyHeart, 190, 50, 50, 50, null);
 		}
-		else
-		if (tileMap.getPlayerLives() <= 0){
+		else if (tileMap.getPlayerLives() <= 0){
 			g.drawImage(emptyHeart, 50, 50, 50, 50, null);
 			g.drawImage(emptyHeart, 120, 50, 50, 50, null);
 			g.drawImage(emptyHeart, 190, 50, 50, 50, null);
 
 			isPaused = true;
-
 			gameOver(imageContext);
 		}
-
 	}
 
 
-	private void drawScore (Graphics g) {
 
-		Font newFont;
+	// Draw key images if the corresponding flags are set
 
-		newFont = new Font ("TimesRoman", Font.BOLD, 25);
-		g.setFont(newFont);		// set this as font for text
+	private void drawInputKeys(Graphics2D imageContext) {
 		
-		g.setColor(Color.WHITE);
-		
-		g.drawString("SCORE", 1000, 40);
-		g.drawString(Integer.toString(totalScore), 1000, 80);
+		if (showMovementKeys) {
+			imageContext.drawImage(movementKeys, 100, 660, 75, 50, null);
+		}
+		if (showJumpKeys) {
+			imageContext.drawImage(jumpKeys, 200, 675, 75, 25, null);
+		}
+		if (showAttackKeys) {
+			imageContext.drawImage(attackKeys, 300, 675, 25, 25, null);
+		}
 	}
 
 
-	private void drawPauseInfo (Graphics g) {
 
-		Font newFont;
-	
-		newFont = new Font ("TimesRoman", Font.BOLD, 15);
-		g.setFont(newFont);		// set this as font for text
+	// Draw buttons when the game is paused
+
+	private void drawPauseButtons (Graphics g) {
+
+		int buttonWidth = 180;
+		int buttonHeight = 60;
+
+		int leftOffset = (pWidth / 2) - (buttonWidth / 2);
+		int topOffset = (pHeight / 2) - (buttonHeight / 2);
 		
-		g.setColor(Color.WHITE);
-		
-		g.drawString("Pause", 10, 20);
-		g.drawString("Esc", 10, 30);
-	}
+		pauseButtonArea = new Rectangle(leftOffset - 200, topOffset, buttonWidth, buttonHeight);
 
+		restartButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
 
-	private void drawButtons (Graphics g) {
-
-		// buttons appear when the game is paused
+		quitButtonArea = new Rectangle(leftOffset + 200, topOffset, buttonWidth, buttonHeight);
 
 		if (isPaused == true){
 
@@ -374,15 +465,11 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 				g.drawImage(pause2Image, pauseButtonArea.x, pauseButtonArea.y, buttonWidth, buttonHeight, null);
 
 
-			// draw the restart button (an actual image that changes when the mouse moves over it)
-
-/* 			if (isOverRestartButton)
+			if (isOverRestartButton)
 				g.drawImage(restart1Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
 			else
-				g.drawImage(restart2Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null); */
+				g.drawImage(restart2Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
 
-
-			// draw the quit button (an actual image that changes when the mouse moves over it)
 
 			if (isOverQuitButton)
 				g.drawImage(quit1Image, quitButtonArea.x, quitButtonArea.y, buttonWidth, buttonHeight, null);
@@ -393,75 +480,44 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	
 	}
 
-	private void drawTutorial (Graphics g) {
 
-		Font newFont;
-	
-		newFont = new Font ("TimesRoman", Font.BOLD, 25);
-		g.setFont(newFont);		// set this as font for text
+
+	// Restarts the game
+
+	private void restartGame() {
+
+		totalScore = 0;
+		level = 1;
+
+		soundManager.stopSound("boss");
+		soundManager.stopSound("background");
+		soundManager.playSound ("background", true);
 		
-		g.setColor(Color.WHITE);
-		
-		if(getLevel() == 1){
-			g.drawString("     MOVEMENT", 200, 200);
-			g.drawString("Left - Right Arrow", 200, 250);
-
-			g.drawString("   JUMP", 600, 200);
-			g.drawString("Up Arrow", 600, 250);
-
-			g.drawString(" SHOOT", 900, 200);
-			g.drawString("Spacebar", 900, 250);
+		try{
+			tileMap = tileManager.loadMap("/maps/map1.txt");
 		}
-
-	}
-
-
-	private void startGame() { 
-		if (gameThread == null) {
-			soundManager.playSound("intro", false);
-			soundManager.playSound ("background", true);
-
-		 	tileManager = new TileMapManager (this);
-
-			try {
-				tileMap = tileManager.loadMap("maps/map1.txt");
-			}
-			
-			catch (Exception e) {
-				System.out.println(e);
-				System.exit(0);
-			}
-
-			gameThread = new Thread(this);
-			gameThread.start();	 		
-
+		catch (Exception f) {
+			System.out.println(f);
+			System.exit(0);
 		}
 	}
 
 
-	public void endLevel() {
-		level = level + 1;
-		levelChange = true;
-	}
 
-
-	// displays a message to the screen when the user stops the game
+	// Displays a message to the screen when the user stops the game
 
 	private void gameOver(Graphics g) {
 		
 		soundManager.stopSound("background");
+		soundManager.stopSound("boss");
+		soundManager.stopSound("walk");
 
-		if (tileMap.getPlayerLives() > 0){
+		if (tileMap.getPlayerLives() > 0)
 			soundManager.playSound("win", false);
-		}
-		else {
+		else 
 			soundManager.playSound("lose", false);
-		}
 
-		gameOver = true;
 		isPaused = true;
-
-
 
 		Font font = new Font("SansSerif", Font.BOLD, 24);
 		FontMetrics metrics = this.getFontMetrics(font);
@@ -480,69 +536,136 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
+
+	// Returns the current level
+	
+	public int getLevel(){
+		return level;
+	}
+
+
+
+	// Ends the level
+	
+	public void endLevel() {
+		level = level + 1;
+		levelChange = true;
+	}
+
+
+
 	// implementation of methods in KeyListener interface
 
-	public void keyPressed (KeyEvent e) {
-
-		if (isPaused)
-			return;
+	public void keyPressed(KeyEvent e) {
+	    if (isPaused) return;
 
 		int keyCode = e.getKeyCode();
 
-		if ((keyCode == KeyEvent.VK_Q) || (keyCode == KeyEvent.VK_END)) {
-           	isRunning = false;		// user can quit anytime by pressing (Q, END)
-			return;				 			
+		switch (keyCode) {
+			case KeyEvent.VK_Q:
+			case KeyEvent.VK_END:
+				isRunning = false;
+				return;
+
+			case KeyEvent.VK_ESCAPE:
+			case KeyEvent.VK_P:
+				isPaused = true;
+				soundManager.stopSound("walk");
+				return;
+
+			case KeyEvent.VK_LEFT:
+			case KeyEvent.VK_A:
+				leftPressed = true;
+				showMovementKeys = true;
+				break;
+
+			case KeyEvent.VK_RIGHT:
+			case KeyEvent.VK_D:
+				rightPressed = true;
+				showMovementKeys = true;
+				break;
+
+			case KeyEvent.VK_SPACE:
+			case KeyEvent.VK_UP:
+			case KeyEvent.VK_W:
+			case KeyEvent.VK_X:
+				upPressed = true;
+				showJumpKeys = true;
+				break;
+
+			case KeyEvent.VK_Z:
+				attackPressed = true;
+				showAttackKeys = true;
+				break;
+
+			case KeyEvent.VK_R:
+				restartGame();
+				break;
+		}
+
+		if (leftPressed) {
+            tileMap.moveLeft();
         }
-		else
-		if ((keyCode == KeyEvent.VK_ESCAPE) || (keyCode == KeyEvent.VK_P)) {
-			isPaused = true;		// user can pause anytime by pressing (ESC, P)
-		 	return;						
-	 	}
-		else
- 		if ((keyCode == KeyEvent.VK_LEFT)  || (keyCode == KeyEvent.VK_A)){
-			leftPressed = true;
-			tileMap.moveLeft();
-		}
-		else
-		if ((keyCode == KeyEvent.VK_RIGHT)  || (keyCode == KeyEvent.VK_D)){
-			rightPressed = true;
-			tileMap.moveRight();
-		}
-		if ((keyCode == KeyEvent.VK_UP) || (keyCode == KeyEvent.VK_W) || (keyCode == KeyEvent.VK_Z)){
-			spacePressed = true;
-			tileMap.jump();
-			soundManager.playSound ("jump", false);
-		}
-		if ((keyCode == KeyEvent.VK_SPACE) || (keyCode == KeyEvent.VK_X)){
-			tileMap.fireProjectile();
-			soundManager.playSound ("pew", false);
-		}
 
+        if (rightPressed) {
+            tileMap.moveRight();
+        }
+
+        if (upPressed) {
+            tileMap.jump();
+            upPressed = false; // Assuming jump action should only happen once per press
+        }
+
+        if (attackPressed) {
+            tileMap.attack();
+            soundManager.playSound("pew", false);
+            attackPressed = false; // Assuming attack should only happen once per press
+        }
+
+		if (!leftPressed && !rightPressed && !upPressed && !attackPressed) {
+			tileMap.playIdle();
+		}
 	}
+	
 
 
-	public void keyReleased (KeyEvent e) {
+	public void keyReleased(KeyEvent e) {
 		int keyCode = e.getKeyCode();
 
-		if (keyCode == KeyEvent.VK_LEFT) {
-			leftPressed = false;
-		} 
-		else if (keyCode == KeyEvent.VK_RIGHT) {
-			rightPressed = false;
-		} 
-		else if (keyCode == KeyEvent.VK_SPACE) {
-			spacePressed = false;
+		switch (keyCode) {
+			case KeyEvent.VK_LEFT:
+			case KeyEvent.VK_A:
+				leftPressed = false;
+				showMovementKeys = false;
+				break;
+	
+			case KeyEvent.VK_RIGHT:
+			case KeyEvent.VK_D:
+				rightPressed = false;
+				showMovementKeys = false;
+				break;
+	
+			case KeyEvent.VK_SPACE:	
+			case KeyEvent.VK_UP:
+			case KeyEvent.VK_W:
+			case KeyEvent.VK_X:
+				upPressed = false;
+				showJumpKeys = false;
+				break;
+	
+			case KeyEvent.VK_Z:
+				attackPressed = false;
+				showAttackKeys = false;
+				break;
 		}
-
 	}
 
+	
 
 	public void keyTyped (KeyEvent e) {
 
 	}
 
-
-	// implement methods of MouseListener interface
 
 	public void mouseClicked(MouseEvent e) {
 
@@ -569,8 +692,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
-	// implement methods of MouseMotionListener interface
-
 	public void mouseDragged(MouseEvent e) {
 
 	}	
@@ -581,34 +702,28 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	}
 
 
-	/* This method handles mouse clicks on one of the buttons
-	   (Pause, Stop, Start Anim, Pause Anim, and Quit).
-	*/
-
+	
 	private void testMousePress(int x, int y) {
 
-/* 		if (isOverRestartButton) {			// mouse click on Stop button
-			isPaused = false;
-		} */
-		if (isOverPauseButton) {		// mouse click on Pause button
-			isPaused = !isPaused;     	// toggle pausing
+		if (isOverPauseButton) {
+			isPaused = !isPaused;
 		}
-		else if (isOverQuitButton) {		// mouse click on Quit button
-			isRunning = false;		// set running to false to terminate
+		else if (isOverRestartButton) {
+			restartGame();
+			isPaused = false;
+		}
+		else if (isOverQuitButton) {
+			isRunning = false;
 		}
   	}
 
 
-	/* This method checks to see if the mouse is currently moving over one of
-	   the buttons (Pause, Stop, Show Anim, Pause Anim, and Quit). It sets a
-	   boolean value which will cause the button to be displayed accordingly.
-	*/
 
 	private void testMouseMove(int x, int y) { 
 		if (isRunning) {
 			isOverPauseButton = pauseButtonArea.contains(x,y) ? true : false;
+			isOverRestartButton = restartButtonArea.contains(x,y) ? true : false;
 			isOverQuitButton = quitButtonArea.contains(x,y) ? true : false;
 		}
 	}
-
 }

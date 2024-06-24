@@ -1,41 +1,68 @@
-import javax.swing.ImageIcon;
 import java.awt.Image;
 import java.awt.Graphics2D;
-import javax.imageio.ImageIO;
-import java.io.File;
 import java.io.IOException;
+import java.io.InputStream;
+import javax.imageio.ImageIO;
 import java.awt.image.BufferedImage;
 
-/**
-   The ImageManager class manages the loading and processing of images.
-*/
 
 public class ImageManager {
-      
+    
+	
    	public ImageManager () {
-
+		// Private constructor to prevent instantiation
 	}
 
-	public static Image loadImage (String fileName) {
-		return new ImageIcon(fileName).getImage();
+
+	public static Image loadImage(String fileName) {
+		
+		Image image = null;
+		InputStream inputStream = ImageManager.class.getResourceAsStream(fileName);
+		
+		if (inputStream != null) {
+			try {
+				image = ImageIO.read(inputStream);
+			} catch (IOException e) {
+				System.out.println("Error loading image: " + e.getMessage());
+			} finally {
+				try {
+					inputStream.close();
+				} catch (IOException e) {
+					System.out.println("Error closing input stream: " + e.getMessage());
+				}
+			}
+		} else {
+			System.out.println("Error loading image: " + fileName + " not found");
+		}
+		return image;
 	}
+
+
 
 	public static BufferedImage loadBufferedImage(String filename) {
 		
-		BufferedImage bi = null;
-
-		File file = new File (filename);
-		try {
-			bi = ImageIO.read(file);
+		BufferedImage image = null;
+		InputStream inputStream = ImageManager.class.getResourceAsStream(filename);
+		
+		if (inputStream != null) {
+			try {
+				image = ImageIO.read(inputStream);
+			} catch (IOException e) {
+				System.out.println("Error loading image: " + e.getMessage());
+			} finally {
+				try {
+					inputStream.close();
+				} catch (IOException e) {
+					System.out.println("Error closing input stream: " + e.getMessage());
+				}
+			}
+		} else {
+			System.out.println("Error loading image: " + filename + " not found");
 		}
-		catch (IOException ioe) {
-			System.out.println ("Error opening file " + filename + ":" + ioe);
-		}
-		return bi;
+		return image;
 	}
 
 
-  	// make a copy of the BufferedImage src
 
 	public static BufferedImage copyImage(BufferedImage src) {
 		
@@ -49,14 +76,10 @@ public class ImageManager {
 
     	Graphics2D g2d = copy.createGraphics();
 
-    	// copy image
     	g2d.drawImage(src, 0, 0, null);
     	g2d.dispose();
 
-    	return copy; 
-	  
+    	return copy;  
 	}
 
 }
-
-

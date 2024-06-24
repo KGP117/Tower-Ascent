@@ -6,7 +6,7 @@ import java.awt.Image;
 public class FlyingEnemy {
 
 	private static final int XSIZE = 200;		// width of the image
-	private static final int YSIZE = 200;		// height of the image
+	private static final int YSIZE = 170;		// height of the image
 
     private Animation flyLeftAnim;
     private Animation flyRightAnim;
@@ -16,7 +16,6 @@ public class FlyingEnemy {
     private int y;          // y-position of sprite
 
     private int initialX;
-    private int initialY;
 
     private int dx;
 
@@ -36,7 +35,6 @@ public class FlyingEnemy {
 		this.y = y;
 
         initialX = x;
-        initialY = y;
 
 		dx = 7;
 
@@ -48,10 +46,12 @@ public class FlyingEnemy {
 		grayImage = false;
 
 
-        Image enemyLeft1 = ImageManager.loadImage("images/flying1_left.png");
-        Image enemyLeft2 = ImageManager.loadImage("images/flying2_left.png");
-        Image enemyLeft3 = ImageManager.loadImage("images/flying3_left.png");
-        Image enemyLeft4 = ImageManager.loadImage("images/flying4_left.png");
+        Image enemyLeft1 = ImageManager.loadImage("images/enemy/flying/flyingLeft1.png");
+        Image enemyLeft2 = ImageManager.loadImage("images/enemy/flying/flyingLeft2.png");
+        Image enemyLeft3 = ImageManager.loadImage("images/enemy/flying/flyingLeft3.png");
+        Image enemyLeft4 = ImageManager.loadImage("images/enemy/flying/flyingLeft4.png");
+        Image enemyLeft5 = ImageManager.loadImage("images/enemy/flying/flyingLeft5.png");
+        Image enemyLeft6 = ImageManager.loadImage("images/enemy/flying/flyingLeft6.png");
 
         flyLeftAnim = new Animation(true);
 
@@ -59,12 +59,16 @@ public class FlyingEnemy {
         flyLeftAnim.addFrame(enemyLeft2, 100);
         flyLeftAnim.addFrame(enemyLeft3, 100);
         flyLeftAnim.addFrame(enemyLeft4, 100);
+        flyLeftAnim.addFrame(enemyLeft5, 100);
+        flyLeftAnim.addFrame(enemyLeft6, 100);
 
 
-        Image enemyRight1 = ImageManager.loadImage("images/flying1_right.png");
-        Image enemyRight2 = ImageManager.loadImage("images/flying2_right.png");
-        Image enemyRight3 = ImageManager.loadImage("images/flying3_right.png");
-        Image enemyRight4 = ImageManager.loadImage("images/flying4_right.png");
+        Image enemyRight1 = ImageManager.loadImage("images/enemy/flying/flyingRight1.png");
+        Image enemyRight2 = ImageManager.loadImage("images/enemy/flying/flyingRight2.png");
+        Image enemyRight3 = ImageManager.loadImage("images/enemy/flying/flyingRight3.png");
+        Image enemyRight4 = ImageManager.loadImage("images/enemy/flying/flyingRight4.png");
+        Image enemyRight5 = ImageManager.loadImage("images/enemy/flying/flyingRight5.png");
+        Image enemyRight6 = ImageManager.loadImage("images/enemy/flying/flyingRight6.png");
 
         flyRightAnim = new Animation(true);
 
@@ -72,6 +76,8 @@ public class FlyingEnemy {
         flyRightAnim.addFrame(enemyRight2, 100);
         flyRightAnim.addFrame(enemyRight3, 100);
         flyRightAnim.addFrame(enemyRight4, 100);
+        flyRightAnim.addFrame(enemyRight5, 100);
+        flyRightAnim.addFrame(enemyRight6, 100);
 
     }
 
@@ -129,7 +135,7 @@ public class FlyingEnemy {
 
 
     public Rectangle2D.Double getRangeRectangle() {
-		return new Rectangle2D.Double (x-200, y-200, XSIZE+400, YSIZE+400);
+		return new Rectangle2D.Double (x-200, y-100, XSIZE+400, YSIZE+200);
 	}
 
 
@@ -155,21 +161,24 @@ public class FlyingEnemy {
 
             initialX = getX();
 
-            if (player.getX() < getX()){
-                if (direction == 1 && dx > 0) {
+            if (player.getX() < getX()) {
+                if (direction != 1) {
+                    flyRightAnim.stop();
+                    flyLeftAnim.start();
+                    direction = 1;
+                }
+                dx = -10;
+            } else {
+                if (direction != 2) {
                     flyLeftAnim.stop();
                     flyRightAnim.start();
                     direction = 2;
                 }
-                dx = -10;
-            }
-            else
-            if (player.getX() > getX()){
                 dx = 10;
             }
         }
         else {
-            if (x < initialX-50 || x > initialX+50)
+            if (x < initialX-150 || x > initialX+150)
             
 			dx = dx * -1;
             changeDirection();
