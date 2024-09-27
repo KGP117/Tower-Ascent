@@ -9,22 +9,31 @@ public class TileMapManager {
 
     private ArrayList<Image> tiles;
     private JFrame window;
+    private int characterIndex;
+    private double displayScale;
 
 
-    public TileMapManager(JFrame window) {
+    public TileMapManager(JFrame window, int characterIndex, double displayScale) {
 	    this.window = window;
+        this.characterIndex = characterIndex;
+        this.displayScale = displayScale;
 
         loadTileImages();
     }
 
 
+
+    // Loads the TileMap file
+
     public TileMap loadMap(String filename) throws IOException {
         
         ArrayList<String> lines = new ArrayList<String>();
+
         int mapWidth = 0;
         int mapHeight = 0;
 
         InputStream inputStream = getClass().getResourceAsStream(filename);
+        
         if (inputStream == null) {
             throw new FileNotFoundException("Map file not found: " + filename);
         }
@@ -46,7 +55,7 @@ public class TileMapManager {
 
         mapHeight = lines.size();
 
-        TileMap newMap = new TileMap(window, mapWidth, mapHeight);
+        TileMap newMap = new TileMap(window, mapWidth, mapHeight, characterIndex, displayScale);
         
         for (int y=0; y<mapHeight; y++) {
             String line = lines.get(y);
@@ -65,6 +74,8 @@ public class TileMapManager {
     }
 
 
+
+    // Loads the Images for the TileMap
 
     public void loadTileImages() {
         tiles = new ArrayList<Image>();

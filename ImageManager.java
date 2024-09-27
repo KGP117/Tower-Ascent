@@ -8,11 +8,13 @@ import java.awt.image.BufferedImage;
 
 public class ImageManager {
     
-	
+
    	public ImageManager () {
 		// Private constructor to prevent instantiation
 	}
 
+
+	// Loads an image from the specified file name
 
 	public static Image loadImage(String fileName) {
 		
@@ -20,24 +22,33 @@ public class ImageManager {
 		InputStream inputStream = ImageManager.class.getResourceAsStream(fileName);
 		
 		if (inputStream != null) {
+			
 			try {
 				image = ImageIO.read(inputStream);
-			} catch (IOException e) {
+			} 
+			catch (IOException e) {
 				System.out.println("Error loading image: " + e.getMessage());
-			} finally {
+			} 
+			finally {
 				try {
 					inputStream.close();
-				} catch (IOException e) {
+				} 
+				catch (IOException e) {
 					System.out.println("Error closing input stream: " + e.getMessage());
 				}
 			}
-		} else {
+		} 
+		else {
 			System.out.println("Error loading image: " + fileName + " not found");
 		}
+
 		return image;
 	}
 
 
+
+
+	// Loads a BufferedImage from the specified file name
 
 	public static BufferedImage loadBufferedImage(String filename) {
 		
@@ -45,24 +56,34 @@ public class ImageManager {
 		InputStream inputStream = ImageManager.class.getResourceAsStream(filename);
 		
 		if (inputStream != null) {
+			
 			try {
 				image = ImageIO.read(inputStream);
-			} catch (IOException e) {
+			} 
+			catch (IOException e) {
 				System.out.println("Error loading image: " + e.getMessage());
-			} finally {
+			} 
+			finally {
 				try {
 					inputStream.close();
-				} catch (IOException e) {
+				} 
+				catch (IOException e) {
 					System.out.println("Error closing input stream: " + e.getMessage());
 				}
 			}
-		} else {
+		} 
+		
+		else {
 			System.out.println("Error loading image: " + filename + " not found");
 		}
+
 		return image;
 	}
 
 
+
+
+	// Creates a copy of the given BufferedImage
 
 	public static BufferedImage copyImage(BufferedImage src) {
 		

@@ -6,6 +6,7 @@ public class Animation {
 
     private ArrayList<AnimFrame> frames;
     private int currFrameIndex;
+    
     private long animTime;
     private long startTime;
     private long totalDuration;
@@ -14,6 +15,9 @@ public class Animation {
     private boolean isActive;
 
     
+    
+    // Constructor to create a new animation
+
     public Animation(boolean loop) {
         frames = new ArrayList<AnimFrame>();
         totalDuration = 0;
@@ -21,12 +25,18 @@ public class Animation {
         isActive = false;
     }
 
+
     
+    // Adds a frame to the animation with the specified image and duration
+
     public synchronized void addFrame(Image image, long duration) {
         totalDuration += duration;
         frames.add(new AnimFrame(image, totalDuration));
     }
     
+
+
+    // Starts playing the animation from the beginning
 
     public synchronized void start() {
         isActive = true;
@@ -36,10 +46,16 @@ public class Animation {
     }
 
 
+
+    // Stops the animation
+
     public synchronized void stop() {
 	    isActive = false;
     }
 
+
+
+    // Updates the animation state based on the elapsed time
     
     public synchronized void update() {
 
@@ -73,7 +89,17 @@ public class Animation {
     }
 
 
+
+    // Returns the index of the current frame being displayed
+
+    public int getCurrentFrameIndex() {
+        return currFrameIndex;
+    }
+
+
     
+    // Gets the image of the current frame
+
     public synchronized Image getImage() {
         
         if (frames.size() == 0) {
@@ -85,20 +111,32 @@ public class Animation {
     }
 
 
+
+    // Returns the total number of frames in the animation
+
     public int getNumFrames() {
 	    return frames.size();
     }
 
+
+
+    // Retrieves the frame at the specified index
 
     private AnimFrame getFrame(int i) {
         return frames.get(i);
     }
 
 
+
+    // Checks if the animation is currently active
+
     public boolean isStillActive () {
 	    return isActive;
     }
 
+
+
+    // Animation class representing frames
 
     private class AnimFrame {
         Image image;
@@ -109,5 +147,16 @@ public class Animation {
             this.endTime = endTime;
         }
     }
+
+    	// Loads the needed animations
+
+/* 	private Animation loadAnimation(String basePath, String action, int frameCount, int frameDuration, boolean loop) {
+		Animation anim = new Animation(loop);
+		for (int i = 1; i <= frameCount; i++) {
+			Image frame = ImageManager.loadImage(basePath + "/" + action + "_" + i + ".png");
+			anim.addFrame(frame, frameDuration);
+		}
+		return anim;
+	} */
 
 }

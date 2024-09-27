@@ -5,8 +5,8 @@ import java.awt.Image;
 
 public class DungeonDoor {
 
-	private static final int XSIZE = 80;		// width of the image
-	private static final int YSIZE = 100;		// height of the image
+	private int XSIZE = 80;		// width of the image
+	private int YSIZE = 100;		// height of the image
 
     private Animation animDoor;
 
@@ -21,12 +21,14 @@ public class DungeonDoor {
 
     // Sprite Constructor
 
-    public DungeonDoor (Player player, int x, int y) {
+    public DungeonDoor (Player player, int x, int y, double displayScale) {
 			
 		this.x = x;
         this.y = y;
-
 		this.player = player;
+        
+        XSIZE = (int)(XSIZE*displayScale); 
+        YSIZE = (int)(YSIZE*displayScale);
 
 		time = 0;				// range is 0 to 10
 		timeChange = 1;				// set to 1

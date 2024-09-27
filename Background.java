@@ -6,6 +6,7 @@ import javax.swing.ImageIcon;
 
 
 public class Background {
+	
   	private Image bgImage;
   	private int bgImageWidth;
 
@@ -16,14 +17,20 @@ public class Background {
 	private int backgroundX2;
 	private int bgDX;
 
+	private double displayScale;
 
 
-	public Background(JFrame window, Image image, int bgDX, int bgDY) {
+
+	// Constructor to initialize the Background with the window, image, scroll speed, and display scale
+
+	public Background(JFrame window, Image image, int bgDX, int bgDY, double displayScale) {
 
     	this.bgImage = image;
     	bgImageWidth = bgImage.getWidth(null);
 
 		dimension = window.getSize();
+
+		this.displayScale = displayScale;
 
 		if (bgImageWidth < dimension.width)
     		this.bgDX = bgDX;
@@ -31,6 +38,8 @@ public class Background {
   	}
 
 
+
+	// Moves the background to the right, creating a scrolling effect
 
   	public void moveRight() {
 
@@ -52,6 +61,8 @@ public class Background {
 
 
 
+	// Moves the background to the left, creating a scrolling effect
+
   	public void moveLeft() {
 	
 		if (bgX == 0) {
@@ -71,13 +82,17 @@ public class Background {
    	}
  
 
+	
+	// Draws the background image onto the screen
 
   	public void draw (Graphics2D g2) {
-		g2.drawImage(bgImage, backgroundX, 0, null);
-		g2.drawImage(bgImage, backgroundX2, 0, null);
+		g2.drawImage(bgImage, backgroundX, 0, (int)(1280*displayScale), (int)(720*displayScale), null);
+		g2.drawImage(bgImage, backgroundX2, 0, (int)(1280*displayScale), (int)(720*displayScale), null);
   	}
 
 
+
+	// Loads an image from the specified file path
 
   	public Image loadImage (String fileName) {
 		return new ImageIcon(fileName).getImage();

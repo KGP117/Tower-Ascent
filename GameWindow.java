@@ -8,7 +8,7 @@ import java.awt.image.BufferStrategy;
 public class GameWindow extends JFrame implements Runnable, KeyListener, MouseListener, MouseMotionListener {
 
 	private static final int NUM_BUFFERS = 2;
-
+	
 	// Thread and State Control
 	private Thread gameThread = null;
 	private volatile boolean isRunning = false;
@@ -23,6 +23,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private BufferStrategy bufferStrategy;
 	private BufferedImage image;
 	private int pWidth, pHeight;
+	private double displayScale;
 	
 	// UI Elements
 	private Rectangle pauseButtonArea, restartButtonArea, quitButtonArea;
@@ -31,44 +32,59 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 	private Image quit1Image, quit2Image;
 	private Image fullHeart, emptyHeart;
 	private Image movementKeys, jumpKeys, attackKeys;
-	private boolean showMovementKeys = false;
-	private boolean showJumpKeys = false;
-	private boolean showAttackKeys = false;
 	
 	// Game State
+	private int level;
+	private int totalScore;
+	private int characterIndex;
 	private boolean bossMusicSound = false;
 	private boolean walkSound = false;
 	private boolean fullscreen = false;
 	private boolean finishedOff = false;
 	private boolean levelChange = false;
-	private int level;
-	private int totalScore;
+	private boolean upPressed = false;
 	private boolean leftPressed = false;
 	private boolean rightPressed = false;
-	private boolean upPressed = false;
 	private boolean attackPressed = false;
+	private boolean pauseButtonHoverSoundPlayed = false;  // To track if hover sound is played for Play button
+	private boolean restartButtonHoverSoundPlayed = false;  // To track if hover sound is played for Quit button
+    private boolean quitButtonHoverSoundPlayed = false;  // To track if hover sound is played for Quit button
 	
 	// Managers
 	SoundManager soundManager;
 	TileMapManager tileManager;
-	TileMap tileMap;	
+	TileMap tileMap;
+	
+	// Title Screen
+    private TitleScreen titleScreen;
 
 
 
 	// GameWindow Constructor
-
 	public GameWindow() {
  
 		super("Tower Ascent");
 
 		initFullScreen();
 		//initWindowedMode();
+		setDisplayScale();
 		loadImages();
 		addKeyListener(this);
 		addMouseListener(this);
 		addMouseMotionListener(this);
-		startGame();
+		showTitleScreen();
 	}
+
+
+
+    // Initialize and show the title screen
+    private void showTitleScreen() {
+        titleScreen = new TitleScreen(this, displayScale);
+		soundManager = SoundManager.getInstance();
+		soundManager.playSound ("titlescreen", true);
+        setContentPane(titleScreen);
+        revalidate();
+    }
 
 
 
@@ -91,9 +107,6 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		}
 
 		device.setFullScreenWindow(this);
-
-		pWidth = getBounds().width;
-		pHeight = getBounds().height;
 
 		try {
 			createBufferStrategy(NUM_BUFFERS);
@@ -165,6 +178,51 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 
 
+	// Adjusts the Display Scale based on Resolution
+
+	public void setDisplayScale(){
+
+		pWidth = getBounds().width;
+		pHeight = getBounds().height;
+
+		displayScale = 1;
+
+		if (pWidth == 800 && pHeight == 600){
+			displayScale = 0.625;
+		}
+		if (pWidth == 1024 && pHeight == 768){
+			displayScale = 0.8;
+		}
+		if (pWidth == 1280 && pHeight == 600){
+			displayScale = 0.834;
+		}
+		if (pWidth == 1152 && pHeight == 864){
+			displayScale = 0.9;
+		}
+		if (pWidth == 1360 && pHeight == 768){
+			displayScale = 1.0667;
+		}
+		if (pWidth == 1366 && pHeight == 768){
+			displayScale = 1.0671875;
+		}
+		if (pWidth == 1400 && pHeight == 1050){
+			displayScale = 1.09375;
+		}
+		if (pWidth == 1440 && pHeight == 900){
+			displayScale = 1.125;
+		}
+		if (pWidth == 1600 && pHeight == 900){
+			displayScale = 1.25;
+		}
+		if (pWidth == 1680 && pHeight == 1050){
+			displayScale = 1.3125;
+		}
+		if (pWidth == 1920 && pHeight == 1080){
+			displayScale = 1.5;
+		}
+	}
+
+
 	// Loads all required UI Images
 
 	public void loadImages(){
@@ -189,17 +247,29 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	// Starts the game
 
-	private void startGame() { 
+	public void startGame(int characterIndex) { 
+
+		requestFocus();
+		titleScreen.hideComponents();
+
+		resetGameState(characterIndex);
+
+		addKeyListener(this);
+		addMouseListener(this);
+		addMouseMotionListener(this);
+
+		this.characterIndex = characterIndex;
 
 		level = 1;
 		soundManager = SoundManager.getInstance();
+		soundManager.stopSound("titlescreen");
 		image = new BufferedImage (pWidth, pHeight, BufferedImage.TYPE_INT_RGB);
 
 		if (gameThread == null) {
 			soundManager.playSound("intro", false);
 			soundManager.playSound ("background", true);
 
-		 	tileManager = new TileMapManager (this);
+		 	tileManager = new TileMapManager (this, characterIndex, displayScale);
 
 			try {
 				tileMap = tileManager.loadMap("/maps/map1.txt");
@@ -210,13 +280,70 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 				System.exit(0);
 			}
 
+			resetPauseScreenState();
+
 			gameThread = new Thread(this);
-			gameThread.start();	 		
+			gameThread.start();
 		}
 	}
 
+	
+	private void resetGameState(int characterIndex) {
+		// Ensure that any previous game thread is stopped
+		if (gameThread != null && gameThread.isAlive()) {
+			isRunning = false;  // Stop the loop in the run method
+			try {
+				gameThread.join();  // Wait for the game thread to terminate
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			}
+			gameThread = null;  // Clean up the thread reference
+		}
+	
+		isPaused = false;
+		isRunning = true;
+		isOverPauseButton = false;
+		isOverRestartButton = false;
+		isOverQuitButton = false;
+		level = 1;  // Reset to level 1 or appropriate level
+		totalScore = 0;  // Reset score or other game state variables
+	
+		// Clear any old map or game objects
+		tileMap = null;
+		tileManager = null;
+
+		tileManager = new TileMapManager(this, characterIndex, displayScale);
+		try {
+			tileMap = tileManager.loadMap("/maps/map1.txt");
+		}
+		catch (Exception e) {
+			System.out.println(e);
+			System.exit(0);
+		}
+	}
+	
+
+
+
+	// Reset the state of the pause screen
+	
+	private void resetPauseScreenState() {
+		isOverPauseButton = false;
+		isOverRestartButton = false;
+		isOverQuitButton = false;
+	
+		int buttonWidth = (int)(180*displayScale);
+		int buttonHeight = (int)(60*displayScale);
+		int leftOffset = (pWidth / 2) - (buttonWidth / 2);
+		int topOffset = (pHeight / 2) - (buttonHeight / 2);
+	
+		pauseButtonArea = new Rectangle(leftOffset - 200, topOffset, buttonWidth, buttonHeight);
+		restartButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
+		quitButtonArea = new Rectangle(leftOffset + 200, topOffset, buttonWidth, buttonHeight);
+	}
 
 	
+
 	// Implementation of Runnable interface
 
 	public void run () {
@@ -240,9 +367,8 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			e.printStackTrace();
 		}
 
-		if (fullscreen == true){
-			finishOff();
-		}
+		//finishOff();
+		
 	}
 
 
@@ -253,12 +379,33 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 		
 		Graphics2D imageContext = null;
 
+		if (leftPressed) {
+            tileMap.moveLeft();
+        }
+
+        if (rightPressed) {
+            tileMap.moveRight();
+        }
+
+        if (upPressed) {
+            tileMap.jump();
+        }
+
+        if (attackPressed) {
+            tileMap.attack();
+            soundManager.playSound("pew", false);
+        }
+
+		if (!leftPressed && !rightPressed && !upPressed && !attackPressed) {
+			tileMap.playIdle();
+		}
+
 		try {
 			imageContext = (Graphics2D) image.getGraphics();
 			tileMap.update();
 	
 			if (!bossMusicSound) {
-				if (tileMap.getPlayerX() >= 4500) {
+				if (tileMap.getPlayerX() >= (int)(4500*displayScale)) {
 					soundManager.stopSound("background");
 					soundManager.playSound("boss", true);
 					bossMusicSound = true;
@@ -279,7 +426,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			if (levelChange) {
 				totalScore = totalScore + tileMap.getScore();
 				levelChange = false;
-				tileManager = new TileMapManager(this);
+				tileManager = new TileMapManager(this, characterIndex, displayScale);
 	
 				try {
 					String filename = "maps/map" + level + ".txt";
@@ -290,10 +437,14 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 					return;
 				}
 			}
-		} catch (Exception e) {
+		}
+
+		catch (Exception e) {
 			e.printStackTrace();
 			isRunning = false;
-		} finally {
+		}
+		 
+		finally {
 			if (imageContext != null) {
 				imageContext.dispose();
 			}
@@ -352,74 +503,64 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	private void drawUIElements (Graphics g) {
 
-		Font newFont = new Font ("TimesRoman", Font.BOLD, 25);
+		Font newFont = new Font ("TimesRoman", Font.BOLD, (int)(25*displayScale));
 		g.setFont(newFont);
 		
 		g.setColor(Color.WHITE);
 		
-		g.drawString("LIVES", 108, 40);
+		g.drawString("LIVES", (int)(108*displayScale), (int)(40*displayScale));
 
-		g.drawString("LEVEL - " + Integer.toString(level), 600, 40);
+		g.drawString("LEVEL - " + Integer.toString(level), (int)(600*displayScale), (int)(40*displayScale));
 
-		g.drawString("SCORE", 1100, 40);
-		g.drawString(Integer.toString(totalScore + tileMap.getScore()), 1100, 80);
+		g.drawString("SCORE", (int)(1100*displayScale), (int)(40*displayScale));
+		g.drawString(Integer.toString(totalScore + tileMap.getScore()), (int)(1100*displayScale), (int)(80*displayScale));
 
 
 		if (level == 1){
-			g.drawString(" MOVEMENT", 200, 200);
-			g.drawImage(movementKeys, 200, 210, 150, 100, null);
+			g.drawString(" MOVEMENT", (int)(200*displayScale), (int)(200*displayScale));
+			g.drawImage(movementKeys, (int)(200*displayScale), (int)(210*displayScale), (int)(150*displayScale), (int)(100*displayScale), null);
 
-			g.drawString("JUMP", 600, 200);
-			g.drawImage(jumpKeys, 560, 225, 150, 50, null);
+			g.drawString("JUMP", (int)(600*displayScale), (int)(200*displayScale));
+			g.drawImage(jumpKeys, (int)(560*displayScale), (int)(225*displayScale), (int)(150*displayScale), (int)(50*displayScale), null);
 
-			g.drawString(" ATTACK", 900, 200);
-			g.drawImage(attackKeys, 930, 225, 50, 50, null);
+			g.drawString(" ATTACK", (int)(900*displayScale), (int)(200*displayScale));
+			g.drawImage(attackKeys, (int)(930*displayScale), (int)(225*displayScale), (int)(50*displayScale), (int)(50*displayScale), null);
 		}
 
 
-		newFont = new Font ("TimesRoman", Font.BOLD, 20);
+		newFont = new Font ("TimesRoman", Font.BOLD, (int)(20*displayScale));
 		g.setFont(newFont);
 
-		g.drawString("Input", 30, 700);
+		g.drawString("Input", (int)(30*displayScale), (int)(700*displayScale));
 
-		newFont = new Font ("TimesRoman", Font.BOLD, 15);
+		newFont = new Font ("TimesRoman", Font.BOLD, (int)(15*displayScale));
 		g.setFont(newFont);
 
-		g.drawString("Pause", 10, 20);
-		g.drawString("Esc", 10, 30);
+		g.drawString("Pause", (int)(10*displayScale), (int)(20*displayScale));
+		g.drawString("Esc", (int)(10*displayScale), (int)(30*displayScale));
 	}
 
 
 
 	// Draws player lives
 
-	private void drawLives (Graphics g) {
+	private void drawLives(Graphics g) {
 
 		Graphics2D imageContext = (Graphics2D) image.getGraphics();
-
-		if (tileMap.getPlayerLives() == 3){
-			g.drawImage(fullHeart, 50, 50, 50, 50, null);
-			g.drawImage(fullHeart, 120, 50, 50, 50, null);
-			g.drawImage(fullHeart, 190, 50, 50, 50, null);
+		
+		int lives = tileMap.getPlayerLives();
+		
+		for (int i = 0; i < 3; i++) {
+			Image heartImage = (i < lives) ? fullHeart : emptyHeart;
+			g.drawImage(heartImage, (int)(50 + i * 70 * displayScale), (int)(50 * displayScale), (int)(50 * displayScale), (int)(50 * displayScale), null);
 		}
-		else if (tileMap.getPlayerLives() == 2){
-			g.drawImage(fullHeart, 50, 50, 50, 50, null);
-			g.drawImage(fullHeart, 120, 50, 50, 50, null);
-			g.drawImage(emptyHeart, 190, 50, 50, 50, null);
-		}
-		else if (tileMap.getPlayerLives() == 1){
-			g.drawImage(fullHeart, 50, 50, 50, 50, null);
-			g.drawImage(emptyHeart, 120, 50, 50, 50, null);
-			g.drawImage(emptyHeart, 190, 50, 50, 50, null);
-		}
-		else if (tileMap.getPlayerLives() <= 0){
-			g.drawImage(emptyHeart, 50, 50, 50, 50, null);
-			g.drawImage(emptyHeart, 120, 50, 50, 50, null);
-			g.drawImage(emptyHeart, 190, 50, 50, 50, null);
-
+		
+		if (lives <= 0){
 			isPaused = true;
 			gameOver(imageContext);
 		}
+		
+		imageContext.dispose();
 	}
 
 
@@ -428,14 +569,14 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	private void drawInputKeys(Graphics2D imageContext) {
 		
-		if (showMovementKeys) {
-			imageContext.drawImage(movementKeys, 100, 660, 75, 50, null);
+		if (rightPressed || leftPressed) {
+			imageContext.drawImage(movementKeys, (int)(100*displayScale), (int)(660*displayScale), (int)(75*displayScale), (int)(50*displayScale), null);
 		}
-		if (showJumpKeys) {
-			imageContext.drawImage(jumpKeys, 200, 675, 75, 25, null);
+		if (upPressed) {
+			imageContext.drawImage(jumpKeys, (int)(200*displayScale), (int)(675*displayScale), (int)(75*displayScale), (int)(25*displayScale), null);
 		}
-		if (showAttackKeys) {
-			imageContext.drawImage(attackKeys, 300, 675, 25, 25, null);
+		if (attackPressed) {
+			imageContext.drawImage(attackKeys, (int)(300*displayScale), (int)(675*displayScale), (int)(25*displayScale), (int)(25*displayScale), null);
 		}
 	}
 
@@ -445,39 +586,29 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 	private void drawPauseButtons (Graphics g) {
 
-		int buttonWidth = 180;
-		int buttonHeight = 60;
+		int buttonWidth = (int)(180*displayScale);
+		int buttonHeight = (int)(60*displayScale);
 
 		int leftOffset = (pWidth / 2) - (buttonWidth / 2);
 		int topOffset = (pHeight / 2) - (buttonHeight / 2);
 		
-		pauseButtonArea = new Rectangle(leftOffset - 200, topOffset, buttonWidth, buttonHeight);
-
+		pauseButtonArea = new Rectangle(leftOffset - (int)(200*displayScale), topOffset, buttonWidth, buttonHeight);
 		restartButtonArea = new Rectangle(leftOffset, topOffset, buttonWidth, buttonHeight);
+		quitButtonArea = new Rectangle(leftOffset + (int)(200*displayScale), topOffset, buttonWidth, buttonHeight);
 
-		quitButtonArea = new Rectangle(leftOffset + 200, topOffset, buttonWidth, buttonHeight);
 
 		if (isPaused == true){
 
-			if (isOverPauseButton)
-				g.drawImage(pause1Image, pauseButtonArea.x, pauseButtonArea.y, buttonWidth, buttonHeight, null);
-			else
-				g.drawImage(pause2Image, pauseButtonArea.x, pauseButtonArea.y, buttonWidth, buttonHeight, null);
+			if (isOverPauseButton) g.drawImage(pause1Image, pauseButtonArea.x, pauseButtonArea.y, buttonWidth, buttonHeight, null);
+			else g.drawImage(pause2Image, pauseButtonArea.x, pauseButtonArea.y, buttonWidth, buttonHeight, null);
 
+			if (isOverRestartButton) g.drawImage(restart1Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
+			else g.drawImage(restart2Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
 
-			if (isOverRestartButton)
-				g.drawImage(restart1Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
-			else
-				g.drawImage(restart2Image, restartButtonArea.x, restartButtonArea.y, buttonWidth, buttonHeight, null);
-
-
-			if (isOverQuitButton)
-				g.drawImage(quit1Image, quitButtonArea.x, quitButtonArea.y, buttonWidth, buttonHeight, null);
-			else
-				g.drawImage(quit2Image, quitButtonArea.x, quitButtonArea.y, buttonWidth, buttonHeight, null);
-		
+			if (isOverQuitButton) g.drawImage(quit1Image, quitButtonArea.x, quitButtonArea.y, buttonWidth, buttonHeight, null);
+			else g.drawImage(quit2Image, quitButtonArea.x, quitButtonArea.y, buttonWidth, buttonHeight, null);
 		}
-	
+
 	}
 
 
@@ -519,7 +650,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 		isPaused = true;
 
-		Font font = new Font("SansSerif", Font.BOLD, 24);
+		Font font = new Font("SansSerif", Font.BOLD, (int)(24*displayScale));
 		FontMetrics metrics = this.getFontMetrics(font);
 
 		String msg1 = "GAME OVER";
@@ -531,14 +662,14 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 		g.setColor(Color.WHITE);
 		g.setFont(font);
-		g.drawString(msg1, x1, y-150);
-		g.drawString(msg2, x2, y-100);
+		g.drawString(msg1, x1, y-(int)(150*displayScale));
+		g.drawString(msg2, x2, y-(int)(100*displayScale));
 	}
 
 
 
 	// Returns the current level
-	
+
 	public int getLevel(){
 		return level;
 	}
@@ -554,7 +685,7 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 
 
-	// implementation of methods in KeyListener interface
+	// Implementation of methods in KeyListener interface
 
 	public void keyPressed(KeyEvent e) {
 	    if (isPaused) return;
@@ -575,59 +706,31 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 
 			case KeyEvent.VK_LEFT:
 			case KeyEvent.VK_A:
-				leftPressed = true;
-				showMovementKeys = true;
-				break;
+				leftPressed = true; break;
 
 			case KeyEvent.VK_RIGHT:
 			case KeyEvent.VK_D:
-				rightPressed = true;
-				showMovementKeys = true;
-				break;
+				rightPressed = true; break;
 
 			case KeyEvent.VK_SPACE:
 			case KeyEvent.VK_UP:
 			case KeyEvent.VK_W:
 			case KeyEvent.VK_X:
-				upPressed = true;
-				showJumpKeys = true;
-				break;
+			case KeyEvent.VK_J:
+				upPressed = true; break;
 
 			case KeyEvent.VK_Z:
-				attackPressed = true;
-				showAttackKeys = true;
-				break;
+			case KeyEvent.VK_K:
+				attackPressed = true; break;
 
 			case KeyEvent.VK_R:
-				restartGame();
-				break;
-		}
-
-		if (leftPressed) {
-            tileMap.moveLeft();
-        }
-
-        if (rightPressed) {
-            tileMap.moveRight();
-        }
-
-        if (upPressed) {
-            tileMap.jump();
-            upPressed = false; // Assuming jump action should only happen once per press
-        }
-
-        if (attackPressed) {
-            tileMap.attack();
-            soundManager.playSound("pew", false);
-            attackPressed = false; // Assuming attack should only happen once per press
-        }
-
-		if (!leftPressed && !rightPressed && !upPressed && !attackPressed) {
-			tileMap.playIdle();
+				restartGame(); break;
 		}
 	}
 	
 
+	
+	// Implementation of methods in KeyListener interface
 
 	public void keyReleased(KeyEvent e) {
 		int keyCode = e.getKeyCode();
@@ -636,94 +739,112 @@ public class GameWindow extends JFrame implements Runnable, KeyListener, MouseLi
 			case KeyEvent.VK_LEFT:
 			case KeyEvent.VK_A:
 				leftPressed = false;
-				showMovementKeys = false;
 				break;
 	
 			case KeyEvent.VK_RIGHT:
 			case KeyEvent.VK_D:
 				rightPressed = false;
-				showMovementKeys = false;
 				break;
 	
 			case KeyEvent.VK_SPACE:	
 			case KeyEvent.VK_UP:
 			case KeyEvent.VK_W:
 			case KeyEvent.VK_X:
+			case KeyEvent.VK_J:
 				upPressed = false;
-				showJumpKeys = false;
 				break;
 	
 			case KeyEvent.VK_Z:
+			case KeyEvent.VK_K:
 				attackPressed = false;
-				showAttackKeys = false;
 				break;
 		}
 	}
 
 	
 
-	public void keyTyped (KeyEvent e) {
-
-	}
-
-
-	public void mouseClicked(MouseEvent e) {
-
-	}
-
-
-	public void mouseEntered(MouseEvent e) {
-
-	}
-
-
-	public void mouseExited(MouseEvent e) {
-
-	}
+	public void keyTyped (KeyEvent e) {}
+	
+	public void mouseClicked(MouseEvent e) {}
+	public void mouseEntered(MouseEvent e) {}
+	public void mouseExited(MouseEvent e) {}
+	public void mouseReleased(MouseEvent e) {}
+	public void mouseDragged(MouseEvent e) {}	
 
 
 	public void mousePressed(MouseEvent e) {
 		testMousePress(e.getX(), e.getY());
 	}
 
-
-	public void mouseReleased(MouseEvent e) {
-
-	}
-
-
-	public void mouseDragged(MouseEvent e) {
-
-	}	
-
-
 	public void mouseMoved(MouseEvent e) {
 		testMouseMove(e.getX(), e.getY()); 
 	}
 
-
 	
 	private void testMousePress(int x, int y) {
 
-		if (isOverPauseButton) {
-			isPaused = !isPaused;
-		}
-		else if (isOverRestartButton) {
-			restartGame();
-			isPaused = false;
-		}
-		else if (isOverQuitButton) {
-			isRunning = false;
+		if (isPaused){
+			if (isOverPauseButton) {
+				soundManager.playSound("click", false); // Play click sound
+				isPaused = !isPaused;
+			}
+			else if (isOverRestartButton) {
+				soundManager.playSound("click", false); // Play click sound
+				restartGame();
+				isPaused = false;
+			}
+			else if (isOverQuitButton) {
+				soundManager.playSound("click", false); // Play click sound
+				isRunning = false;
+				gameThread.stop();
+				showTitleScreen();
+			}
 		}
   	}
 
+	public void startover(){
+		//isRunning = true;
+	}
 
 
 	private void testMouseMove(int x, int y) { 
+		
+		boolean wasOverPauseButton = isOverPauseButton;
+		boolean wasOverRestartButton = isOverRestartButton;
+        boolean wasOverQuitButton = isOverQuitButton;
+
 		if (isRunning) {
 			isOverPauseButton = pauseButtonArea.contains(x,y) ? true : false;
 			isOverRestartButton = restartButtonArea.contains(x,y) ? true : false;
 			isOverQuitButton = quitButtonArea.contains(x,y) ? true : false;
 		}
+
+
+		// Play hover sound when first moving over a button
+		if (isPaused){
+
+			if (isOverPauseButton && !wasOverPauseButton && !pauseButtonHoverSoundPlayed) {
+				soundManager.playSound("click", false); // Play hover sound for Play button
+				pauseButtonHoverSoundPlayed = true;
+			} else if (!isOverPauseButton) {
+				pauseButtonHoverSoundPlayed = false; // Reset when not hovering
+			}
+
+			if (isOverRestartButton && !wasOverRestartButton && !restartButtonHoverSoundPlayed) {
+				soundManager.playSound("click", false); // Play hover sound for Quit button
+				restartButtonHoverSoundPlayed = true;
+			} else if (!isOverRestartButton) {
+				restartButtonHoverSoundPlayed = false; // Reset when not hovering
+			}
+
+			if (isOverQuitButton && !wasOverQuitButton && !quitButtonHoverSoundPlayed) {
+				soundManager.playSound("click", false); // Play hover sound for Quit button
+				quitButtonHoverSoundPlayed = true;
+			} else if (!isOverQuitButton) {
+				quitButtonHoverSoundPlayed = false; // Reset when not hovering
+			}
+		}
+
 	}
+	
 }

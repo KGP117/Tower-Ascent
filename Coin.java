@@ -5,8 +5,8 @@ import java.awt.Image;
 
 public class Coin {
 
-	private static final int XSIZE = 50;		// width of the image
-	private static final int YSIZE = 50;		// height of the image
+	private int XSIZE = 50;		// width of the image
+	private int YSIZE = 50;		// height of the image
 
     private Animation animCoin;
 
@@ -21,11 +21,14 @@ public class Coin {
 
     // Sprite Constructor
 
-    public Coin (Player player, int x, int y) {
+    public Coin (Player player, int x, int y, double displayScale) {
 			
 		this.x = x;
         this.y = y;
 		this.player = player;
+
+        XSIZE = (int)(XSIZE*displayScale); 
+        YSIZE = (int)(YSIZE*displayScale);
 
 		time = 0;				// range is 0 to 10
 		timeChange = 1;				// set to 1

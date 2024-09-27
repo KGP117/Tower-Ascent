@@ -1,11 +1,10 @@
 import java.awt.Image;
-import java.awt.Dimension;
 import java.awt.Graphics2D;
 import javax.swing.JFrame;
 
 public class TileMap {
 
-    private static final int TILE_SIZE = 64; // set according to tile images
+    private int TILE_SIZE = 64;
 
     private Image[][] tiles;
     private int screenWidth, screenHeight;
@@ -23,113 +22,97 @@ public class TileMap {
     private BossEnemy bossEnemy[];
 
     private JFrame window;
-    private Dimension dimension;
 
     BackgroundManager bgManager;
     SoundManager soundManager;
 
 
-    public TileMap(JFrame window, int width, int height) {
+    public TileMap(JFrame window, int width, int height, int characterIndex, double displayScale) {
+
+        TILE_SIZE = (int)(TILE_SIZE*displayScale);
+
+        this.window = window;
 
         soundManager = SoundManager.getInstance();
 
-        this.window = window;
-        dimension = window.getSize();
-
-        screenWidth = dimension.width;
-        screenHeight = dimension.height;
+        screenWidth = (int)(1280 * displayScale);
+        screenHeight = (int)(720 * displayScale);
 
         mapWidth = width;
         mapHeight = height;
 
         offsetY = screenHeight - tilesToPixels(mapHeight);
 
-        bgManager = new BackgroundManager (window, 12);
+        bgManager = new BackgroundManager (window, 12, displayScale);
         tiles = new Image[mapWidth][mapHeight];
-        player = new Player (window, this, bgManager);
+        player = new Player (window, this, bgManager, characterIndex, displayScale);
         coin = new Coin[10];
         groundEnemy = new GroundEnemy[3];
         flyingEnemy = new FlyingEnemy[2];
         bossEnemy = new BossEnemy[2];
 
-        if (((GameWindow) window).getLevel() == 1){
-            coin[1] = new Coin (player, 1000, 600);
-            coin[2] = new Coin (player, 900, 600);
-            coin[3] = new Coin (player, 800, 600);
-            door = new DungeonDoor(player, 1131, 556);
-        }
-
-        else
-        if (((GameWindow) window).getLevel() == 2){
-            coin[1] = new Coin (player, 500, 150);
-            coin[2] = new Coin (player, 1300, 345);
-            coin[3] = new Coin (player, 1125, 475);
-            door = new DungeonDoor(player, 350, 110);
-            groundEnemy[1] = new GroundEnemy (this, player, 800, screenHeight-TILE_SIZE-95);
-        }
-
-        else 
-        if (((GameWindow) window).getLevel() == 3){
-            coin[1] = new Coin (player, 6100, 350);
-            coin[2] = new Coin (player, 900, 25);
-            coin[3] = new Coin (player, 3850, 275);
-            door = new DungeonDoor(player, 6100, 556);
-            groundEnemy[1] = new GroundEnemy (this, player, 1600, screenHeight-TILE_SIZE-155);
-            flyingEnemy[1] = new FlyingEnemy(player, 3400, 250);
-            bossEnemy[1] = new BossEnemy(player, 5500, 325);
-        }
-        
-
-        int x, y;
-
-        x = 192;					// position player in 'random' location
-        y = dimension.height - (TILE_SIZE + 80);
+        int x = (int)(150*displayScale);					// position player in 'random' location
+        int y = screenHeight - ((TILE_SIZE + (int)(80*displayScale)));
 
         player.setX(x);
         player.setY(y);
 
 
-        player.start(player.getDirection(), player.isInAir());
-        
-        
+        // Object Positioning
+
         if (((GameWindow) window).getLevel() == 1){
+            coin[1] = new Coin (player, (int)(1000*displayScale), (int)(600*displayScale), displayScale);
+            coin[2] = new Coin (player, (int)(900*displayScale), (int)(600*displayScale), displayScale);
+            coin[3] = new Coin (player, (int)(800*displayScale), (int)(600*displayScale), displayScale);
+            door = new DungeonDoor(player, (int)(1131*displayScale), (int)(556*displayScale), displayScale);
+
             coin[1].start();
             coin[2].start();
             coin[3].start();
             door.start();
         }
 
-        else
-        if (((GameWindow) window).getLevel() == 2){
+        else if (((GameWindow) window).getLevel() == 2){
+            coin[1] = new Coin (player, (int)(500*displayScale), (int)(150*displayScale), displayScale);
+            coin[2] = new Coin (player, (int)(1300*displayScale), (int)(345*displayScale), displayScale);
+            coin[3] = new Coin (player, (int)(1125*displayScale), (int)(475*displayScale), displayScale);
+            door = new DungeonDoor(player, (int)(350*displayScale), (int)(110*displayScale), displayScale);
+            groundEnemy[1] = new GroundEnemy (this, player, (int)(800*displayScale), screenHeight-TILE_SIZE-(int)(100*displayScale), displayScale);
+
             coin[1].start();
             coin[2].start();
             coin[3].start();
             door.start();
-            groundEnemy[1].start(2);
         }
 
-        else 
-        if (((GameWindow) window).getLevel() == 3){
+        else if (((GameWindow) window).getLevel() == 3){
+            coin[1] = new Coin (player, (int)(6100*displayScale), (int)(350*displayScale), displayScale);
+            coin[2] = new Coin (player, (int)(900*displayScale), (int)(25*displayScale), displayScale);
+            coin[3] = new Coin (player, (int)(3850*displayScale), (int)(275*displayScale), displayScale);
+            door = new DungeonDoor(player, (int)(6100*displayScale), (int)(556*displayScale), displayScale);
+            groundEnemy[1] = new GroundEnemy (this, player, (int)(1600*displayScale), screenHeight-TILE_SIZE-(int)(164*displayScale), displayScale);
+            flyingEnemy[1] = new FlyingEnemy(this, player, (int)(3400*displayScale), (int)(250*displayScale), displayScale);
+            bossEnemy[1] = new BossEnemy(this, player, (int)(5500*displayScale), (int)(325*displayScale), displayScale);
+
             coin[1].start();
             coin[2].start();
             coin[3].start();
             door.start();
-            groundEnemy[1].start(2);
             flyingEnemy[1].start(1);
             bossEnemy[1].start(1);
         }
+
     }
 
 
     
-    // Gets the width of this TileMap (number of pixels across).
-    
+    // Gets the width of this TileMap (number of pixels across).    
+
     public int getWidthPixels() {
 	    return tilesToPixels(mapWidth);
     }
 
 
-    
     // Gets the width of this TileMap (number of tiles across).
     
     public int getWidth() {
@@ -156,9 +139,7 @@ public class TileMap {
     */
     public Image getTile(int x, int y) {
         
-        if (x < 0 || x >= mapWidth || 
-            y < 0 || y >= mapHeight)
-        {
+        if (x < 0 || x >= mapWidth || y < 0 || y >= mapHeight){
             return null;
         }
 
@@ -175,16 +156,9 @@ public class TileMap {
         tiles[x][y] = tile;
     }
 
-
-    /**
-        Gets an Iterator of all the Sprites in this map,
-        excluding the player Sprite.
-    */
-
     
     // Class method to convert a pixel position to a tile position.
     
-
     public int pixelsToTiles(float pixels) {
         return pixelsToTiles(Math.round(pixels));
     }
@@ -192,7 +166,6 @@ public class TileMap {
 
     
     // Class method to convert a pixel position to a tile position.
-    
 
     public int pixelsToTiles(int pixels) {
         return (int)Math.floor((float)pixels / TILE_SIZE);
@@ -202,7 +175,7 @@ public class TileMap {
     
     // Class method to convert a tile position to a pixel position.
 
-    public static int tilesToPixels(int numTiles) {
+    public int tilesToPixels(int numTiles) {
         return numTiles * TILE_SIZE;
     }
 
@@ -212,10 +185,6 @@ public class TileMap {
     public void draw(Graphics2D g2) {
 
         int mapWidthPixels = tilesToPixels(mapWidth);
-        //int mapHeightPixels = tilesToPixels(mapHeight);
-
-        // get the scrolling position of the map
-        // based on player's position
 
         // Calculate horizontal offset
         int offsetX = screenWidth / 2 - Math.round(player.getX()) - TILE_SIZE;
@@ -239,15 +208,12 @@ public class TileMap {
                 Image image = getTile(x, y);
                 
                 if (image != null) {
-                    g2.drawImage(image, 
-                        tilesToPixels(x) + offsetX, 
-                        tilesToPixels(y) + offsetY, 
-                        null);
+                    g2.drawImage(image, tilesToPixels(x) + offsetX, tilesToPixels(y) + offsetY, TILE_SIZE, TILE_SIZE, null);
                 }
             }
         }
         
-        player.draw(g2, offsetX, player.getDirection(), player.isInAir());
+        player.draw(g2, offsetX, player.getDirection());
 
 
         if (((GameWindow) window).getLevel() == 1){
@@ -291,15 +257,19 @@ public class TileMap {
 
 
     public void moveLeft() {
-        player.move(1);
+        if (!player.isAttacking() && !player.isHit()){
+            player.move(1);
+        }
     }
 
     public void moveRight() {
-        player.move(2);
+        if (!player.isAttacking() && !player.isHit()){
+            player.move(2);
+        }
     }
 
     public void jump() {
-        if (!player.isGoingUp() && !player.isGoingDown()){
+        if (!player.isGoingUp() && !player.isGoingDown() && !player.isAttacking() && !player.isHit()){
             soundManager.playSound("jump", false);
             player.move(3);
         }
@@ -349,19 +319,6 @@ public class TileMap {
         }
 
         if (((GameWindow) window).getLevel() == 1){
-
-/*             for (int i=1; i<10; i++){
-                
-                if (coin[i] != null){
-                    coin[i].update();
-
-                    if (coin[i].collidesWithPlayer()) {
-                        soundManager.playSound("coin", false);
-                        player.addCoin(1);
-                        coin[i] = null;
-                    }
-                }
-            } */
             
             door.update();
 
@@ -371,19 +328,6 @@ public class TileMap {
         }
 
         else if (((GameWindow) window).getLevel() == 2){
-            
-/*             for (int i=1; i<10; i++){
-                
-                if (coin[i] != null){
-                    coin[i].update();
-
-                    if (coin[i].collidesWithPlayer()) {
-                        soundManager.playSound("coin", false);
-                        player.addCoin(1);
-                        coin[i] = null;
-                    }
-                }
-            } */
 
             door.update();
             groundEnemy[1].update();
@@ -392,9 +336,13 @@ public class TileMap {
                 ((GameWindow) window).endLevel();
             }
 
-            if (groundEnemy[1].collidesWithPlayer()) {
+            if (groundEnemy[1].attackHitPlayer()) {
             
+                player.getHit();
+
                 player.minusLive();
+
+                soundManager.playSound("hurt", false);
                 
                 if (player.getX() < groundEnemy[1].getX()){
                     player.setX(player.getX()-100);
@@ -405,22 +353,22 @@ public class TileMap {
                     player.update(player.getDirection(), player.isInAir());
                 }
             }
+
+            if (player.isAttacking()){
+                if (groundEnemy[1].gotHit()){
+                    soundManager.playSound("hurt", false);
+                    if (player.getX() < groundEnemy[1].getX()){
+                        groundEnemy[1].setX(groundEnemy[1].getX()+100);
+                    }
+                    else if (player.getX() > groundEnemy[1].getX()){
+                        groundEnemy[1].setX(groundEnemy[1].getX()-100);
+                    }
+                    //groundEnemy[1] = null; // This crashes is enemy is set to null, use a boolean like isDead
+                }
+            }
         }
 
         else if (((GameWindow) window).getLevel() == 3){
-            
-/*             for (int i=1; i<10; i++){
-                
-                if (coin[i] != null){
-                    coin[i].update();
-
-                    if (coin[i].collidesWithPlayer()) {
-                        soundManager.playSound("coin", false);
-                        player.addCoin(1);
-                        coin[i] = null;
-                    }
-                }
-            } */
 
             door.update();
             groundEnemy[1].update();
@@ -432,8 +380,10 @@ public class TileMap {
                 ((GameWindow) window).endLevel();
             }
 
-            if (groundEnemy[1].collidesWithPlayer()) {
+            if (groundEnemy[1].attackHitPlayer()) {
             
+                player.getHit();
+
                 player.minusLive();
                 
                 if (player.getX() < groundEnemy[1].getX()){
@@ -445,9 +395,22 @@ public class TileMap {
                     player.update(player.getDirection(), player.isInAir());
                 }
             }
+
+            if (player.isAttacking()){
+                if (groundEnemy[1].gotHit()){
+                    if (player.getX() < groundEnemy[1].getX()){
+                        groundEnemy[1].setX(groundEnemy[1].getX()+100);
+                    }
+                    else if (player.getX() > groundEnemy[1].getX()){
+                        groundEnemy[1].setX(groundEnemy[1].getX()-100);
+                    }
+                }
+            }
             
             if (flyingEnemy[1].collidesWithPlayer()) {
             
+                player.getHit();
+
                 player.minusLive();
                 
                 if (player.getX() < flyingEnemy[1].getX()){
@@ -462,6 +425,8 @@ public class TileMap {
 
             if (bossEnemy[1].collidesWithPlayer()) {
             
+                player.getHit();
+
                 player.minusLive();
                 
                 if (player.getX() < bossEnemy[1].getX()){
@@ -479,7 +444,7 @@ public class TileMap {
 
 
     public void playIdle() {
-        //player.playIdle();
+        player.playIdle();
     }
 
 }

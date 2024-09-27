@@ -1,12 +1,18 @@
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
 import java.awt.Image;
+import java.awt.Point;
 
 
 public class FlyingEnemy {
 
-	private static final int XSIZE = 200;		// width of the image
-	private static final int YSIZE = 170;		// height of the image
+    private TileMap tileMap;
+
+	private int XSIZE = 200;		// width of the image
+	private int YSIZE = 170;		// height of the image
+
+    private int TILE_SIZE = 64;
 
     private Animation flyLeftAnim;
     private Animation flyRightAnim;
@@ -21,6 +27,8 @@ public class FlyingEnemy {
 
     private int direction = 1;
 
+    private double displayScale;
+
     private Player player;
 
     int time, timeChange;				// to control when the image is grayed
@@ -29,15 +37,22 @@ public class FlyingEnemy {
 
     // Sprite Constructor
 
-    public FlyingEnemy (Player player, int x, int y) {
+    public FlyingEnemy (TileMap tileMap, Player player, int x, int y, double displayScale) {
+
+        XSIZE = (int)(200*displayScale);
+        YSIZE = (int)(170*displayScale);
+    
+        TILE_SIZE = (int)(64*displayScale);
+    
+        dx = (int)(7*displayScale);
 			
 		this.x = x;
 		this.y = y;
+        this.displayScale = displayScale;
 
         initialX = x;
 
-		dx = 7;
-
+        this.tileMap = tileMap;
 		this.player = player;
 
 		time = 0;				// range is 0 to 10
@@ -81,6 +96,106 @@ public class FlyingEnemy {
 
     }
 
+
+        // Checks if the enemy collides with a tile
+
+	public Point collidesWithTile(int enemyX, int enemyY) { 	
+
+    	int offsetY = tileMap.getOffsetY();
+
+		int xTile = tileMap.pixelsToTiles(enemyX);
+		int yTile = tileMap.pixelsToTiles(enemyY - offsetY);
+
+		if (tileMap.getTile(xTile, yTile) != null) {
+	    	Point tilePos = new Point (xTile, yTile);
+	  		return tilePos;
+		}
+
+		else {
+			yTile = tileMap.pixelsToTiles(enemyY - offsetY + (YSIZE - TILE_SIZE));
+
+			if (tileMap.getTile(xTile, yTile) != null) {
+				Point tilePos = new Point (xTile, yTile);
+				return tilePos;
+			}
+			else {
+				return null;
+			}
+			
+		}
+
+   	}
+
+
+
+	// Checks if the enemy collides with a tile below them
+	
+	public Point collidesWithTileDown(int enemyX, int enemyY) {
+
+		int offsetY = tileMap.getOffsetY();
+		int xTile = tileMap.pixelsToTiles(enemyX);
+
+		int yTileFrom = tileMap.pixelsToTiles(enemyY - offsetY);
+		int yTileTo = tileMap.pixelsToTiles(enemyY - offsetY + YSIZE);
+
+		for (int yTile = yTileFrom; yTile <= yTileTo; yTile++) {
+
+			if (tileMap.getTile(xTile, yTile) != null) {
+				Point tilePos = new Point(xTile, yTile);
+				return tilePos;
+			} 
+			
+			else {
+				if (tileMap.getTile(xTile + 1, yTile) != null) {
+
+					int leftSide = (xTile + 1) * TILE_SIZE;
+					
+					if (enemyX + XSIZE > leftSide) {
+						Point tilePos = new Point(xTile + 1, yTile);
+						return tilePos;
+					}
+				}
+			}
+		}
+
+		return null;
+	}
+
+
+
+	// Checks if the enemy collides with a tile above them
+
+   	public Point collidesWithTileUp (int newEnemyX, int newEnemyY) {
+
+      	int offsetY = tileMap.getOffsetY();
+	  	int xTile = tileMap.pixelsToTiles(newEnemyX);
+
+	  	int yTileFrom = tileMap.pixelsToTiles(YSIZE - offsetY);
+	  	int yTileTo = tileMap.pixelsToTiles(newEnemyY - offsetY);
+	 
+	  	for (int yTile=yTileFrom; yTile>=yTileTo; yTile--) {
+
+			if (tileMap.getTile(xTile, yTile) != null) {
+	        	Point tilePos = new Point (xTile, yTile);
+	  			return tilePos;
+			}
+
+			else {
+				if (tileMap.getTile(xTile+1, yTile) != null) {
+					int leftSide = (xTile + 1) * TILE_SIZE;
+
+					if (newEnemyX + XSIZE > leftSide) {
+				    	Point tilePos = new Point (xTile+1, yTile);
+				    	return tilePos;
+			        }
+				}
+			}	    
+	  	}
+
+	  	return null;
+   	}
+
+
     public void draw (Graphics2D g2, int offsetX) {
         
         if (direction == 1){
@@ -90,6 +205,12 @@ public class FlyingEnemy {
         if (direction == 2){
             g2.drawImage(flyRightAnim.getImage(), x + offsetX, y, XSIZE, YSIZE, null);
         }
+
+        g2.setColor(Color.red);
+		//g2.drawRect(x+offsetX, y, XSIZE, YSIZE);
+
+        g2.setColor(Color.blue);
+		//g2.drawRect(x+offsetX-(int)(200*displayScale), y-(int)(100*displayScale), XSIZE+(int)(400*displayScale), YSIZE+(int)(200*displayScale));
 	}
 
 
@@ -135,7 +256,7 @@ public class FlyingEnemy {
 
 
     public Rectangle2D.Double getRangeRectangle() {
-		return new Rectangle2D.Double (x-200, y-100, XSIZE+400, YSIZE+200);
+		return new Rectangle2D.Double (x-(int)(200*displayScale), y-(int)(100*displayScale), XSIZE+(int)(400*displayScale), YSIZE+(int)(200*displayScale));
 	}
 
 

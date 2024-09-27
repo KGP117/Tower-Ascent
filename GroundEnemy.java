@@ -1,16 +1,23 @@
+import java.awt.Image;
+import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.geom.Rectangle2D;
-import java.awt.Image;
 
 
 public class GroundEnemy {
 
-    // Not implemented yet
-    // Use the tile map to do collision detection with enemies
-    private TileMap tileMap;
+	private int enemyCollisionWidth = 92;		// width of the image
+	private int enemyCollisionHeight = 100;		// height of the image
 
-	private static final int XSIZE = 100;		// width of the image
-	private static final int YSIZE = 100;		// height of the image
+    private int enemyHitboxWidth = 92;
+    private int enemyHitboxHeight = 100;
+
+    private int enemyAttackHitboxWidth = 100;
+    private int enemyAttackHitboxHeight = 120;
+
+    private int enemySpriteWidth = 184;		// width of the image
+	private int enemySpriteHeight = 200;		// height of the image
+
 
     private Animation groundWalkLeftAnim;
     private Animation groundWalkRightAnim;
@@ -20,8 +27,8 @@ public class GroundEnemy {
     private Animation groundHitRightAnim;
     
 
-    private int x;          // x-position of sprite
-    private int y;          // y-position of sprite
+    private int enemyX;          // x-position of sprite
+    private int enemyY;          // y-position of sprite
 
     private int initialX;
 
@@ -30,6 +37,9 @@ public class GroundEnemy {
     private int direction = 2;
     private boolean hit = false;
     private boolean attack = false;
+    private boolean isHit = false;
+
+    private double displayScale;
 
     private Player player;
 
@@ -39,194 +49,142 @@ public class GroundEnemy {
 
     // Sprite Constructor
 
-    public GroundEnemy (TileMap tilemap, Player player, int x, int y) {
+    public GroundEnemy (TileMap tileMap, Player player, int x, int y, double displayScale) {
+
+        enemyCollisionWidth = (int)(enemyCollisionWidth*displayScale);
+        enemyCollisionHeight = (int)(enemyCollisionHeight*displayScale);
+
+        enemyHitboxWidth = (int)(enemyHitboxWidth*displayScale);
+        enemyHitboxHeight = (int)(enemyHitboxHeight*displayScale);
+    
+        enemyAttackHitboxWidth = (int)(enemyAttackHitboxWidth*displayScale);
+        enemyAttackHitboxHeight = (int)(enemyAttackHitboxHeight*displayScale);
+
+        enemySpriteWidth = (int)(enemySpriteWidth*displayScale);
+        enemySpriteHeight = (int)(enemySpriteHeight*displayScale);
+    
+        dx = (int)(2*displayScale);
 			
-		this.x = x;
-		this.y = y;
+		enemyX = x;
+		enemyY = y;
 
         initialX = x;
 
-		dx = 2;
-
+        this.displayScale = displayScale;
 		this.player = player;
 
-		time = 0;				// range is 0 to 10
-		timeChange = 1;				// set to 1
-		originalImage = true;
-		grayImage = false;
 
+        String basePath = "images/enemy/ground";
 
-        Image groundEnemyLeft1 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft1.png");
-        Image groundEnemyLeft2 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft2.png");
-        Image groundEnemyLeft3 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft3.png");
-        Image groundEnemyLeft4 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft4.png");
-        Image groundEnemyLeft5 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft5.png");
-        Image groundEnemyLeft6 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft6.png");
-        Image groundEnemyLeft7 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft7.png");
-        Image groundEnemyLeft8 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft8.png");
-        Image groundEnemyLeft9 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft9.png");
-        Image groundEnemyLeft10 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft10.png");
-        Image groundEnemyLeft11 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft11.png");
-        Image groundEnemyLeft12 = ImageManager.loadImage("images/enemy/ground/skeletonWalkLeft12.png");
-
-        groundWalkLeftAnim = new Animation(true);
-
-        groundWalkLeftAnim.addFrame(groundEnemyLeft1, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft2, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft3, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft4, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft5, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft6, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft7, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft8, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft9, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft10, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft11, 100);
-        groundWalkLeftAnim.addFrame(groundEnemyLeft12, 100);
-
-
-        Image groundEnemyRight1 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight1.png");
-        Image groundEnemyRight2 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight2.png");
-        Image groundEnemyRight3 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight3.png");
-        Image groundEnemyRight4 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight4.png");
-        Image groundEnemyRight5 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight5.png");
-        Image groundEnemyRight6 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight6.png");
-        Image groundEnemyRight7 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight7.png");
-        Image groundEnemyRight8 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight8.png");
-        Image groundEnemyRight9 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight9.png");
-        Image groundEnemyRight10 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight10.png");
-        Image groundEnemyRight11 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight11.png");
-        Image groundEnemyRight12 = ImageManager.loadImage("images/enemy/ground/skeletonWalkRight12.png");
-
-        groundWalkRightAnim = new Animation(true);
-
-        groundWalkRightAnim.addFrame(groundEnemyRight1, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight2, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight3, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight4, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight5, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight6, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight7, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight8, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight9, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight10, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight11, 100);
-        groundWalkRightAnim.addFrame(groundEnemyRight12, 100);
-
-
-        Image groundAttackLeft1 = ImageManager.loadImage("images/groundAttack_1_left.png");
-        Image groundAttackLeft2 = ImageManager.loadImage("images/groundAttack_2_left.png");
-        Image groundAttackLeft3 = ImageManager.loadImage("images/groundAttack_3_left.png");
-
-        groundAttackLeftAnim = new Animation(true);
-
-        groundAttackLeftAnim.addFrame(groundAttackLeft1, 100);
-        groundAttackLeftAnim.addFrame(groundAttackLeft2, 100);
-        groundAttackLeftAnim.addFrame(groundAttackLeft3, 100);
-
-
-        Image groundAttackRight1 = ImageManager.loadImage("images/groundAttack_1_right.png");
-        Image groundAttackRight2 = ImageManager.loadImage("images/groundAttack_2_right.png");
-        Image groundAttackRight3 = ImageManager.loadImage("images/groundAttack_3_right.png");
-
-        groundAttackRightAnim = new Animation(true);
-
-        groundAttackRightAnim.addFrame(groundAttackRight1, 100);
-        groundAttackRightAnim.addFrame(groundAttackRight2, 100);
-        groundAttackRightAnim.addFrame(groundAttackRight3, 100);
-
-
-        Image groundHitLeft1 = ImageManager.loadImage("images/groundhit_left.png");
-
-        groundHitLeftAnim = new Animation(true);
-
-        groundHitLeftAnim.addFrame(groundHitLeft1, 100);
-
-        Image groundHitRight1 = ImageManager.loadImage("images/groundhit_right.png");
-
-        groundHitRightAnim = new Animation(true);
-
-        groundHitRightAnim.addFrame(groundHitRight1, 100);
+        groundWalkLeftAnim = loadAnimation(basePath, "skeletonWalkLeft", 12, 100, true);
+        groundWalkRightAnim = loadAnimation(basePath, "skeletonWalkRight", 12, 100, true);
+        
+        groundAttackLeftAnim = loadAnimation(basePath, "skeletonAttackLeft", 12, 170, false);
+        groundAttackRightAnim = loadAnimation(basePath, "skeletonAttackRight", 12, 170, false);
+        
+        groundHitLeftAnim = loadAnimation(basePath, "skeletonHitLeft", 3, 200, false);
+        groundHitRightAnim = loadAnimation(basePath, "skeletonHitRight", 3, 200, false);        
 
     }
 
+
+
+    // Loads the needed animations
+
+    private Animation loadAnimation(String basePath, String action, int frameCount, int frameDuration, boolean loop) {
+        Animation animation = new Animation(loop);
+        for (int i = 1; i <= frameCount; i++) {
+            Image frame = ImageManager.loadImage(basePath + "/" + action + i + ".png");
+            animation.addFrame(frame, frameDuration);
+        }
+        return animation;
+    }
+    
+
+
     public void draw (Graphics2D g2, int offsetX) {
-        
+
         if (direction == 1){
             
-            if (!attack && !hit){
-                g2.drawImage(groundWalkLeftAnim.getImage(), x + offsetX, y, XSIZE, YSIZE, null);
+            if (isHit){
+                g2.drawImage(groundHitLeftAnim.getImage(), enemyX + offsetX-(int)(50*displayScale), enemyY-(int)(50*displayScale), enemySpriteWidth, enemySpriteHeight, null);
+                if (!groundHitLeftAnim.isStillActive()){
+                    groundHitLeftAnim.start();
+                    isHit = false;
+                }
+                groundHitLeftAnim.update();
             }
 
-            else
-            if (attack){
-                g2.drawImage(groundAttackLeftAnim.getImage(), x + offsetX, y, XSIZE, YSIZE, null);
+            else if (attack){
+                g2.drawImage(groundAttackLeftAnim.getImage(), enemyX + offsetX-(int)(50*displayScale), enemyY-(int)(50*displayScale), enemySpriteWidth, enemySpriteHeight, null);
+                if (!groundAttackLeftAnim.isStillActive()){
+                    groundAttackLeftAnim.start();
+                }
+                groundAttackLeftAnim.update();
             }
 
-            else 
-            if (hit){
-                g2.drawImage(groundHitLeftAnim.getImage(), x + offsetX, y, XSIZE, YSIZE, null);
+            else {
+                g2.drawImage(groundWalkLeftAnim.getImage(), enemyX + offsetX -(int)(50*displayScale), enemyY-(int)(50*displayScale), enemySpriteWidth, enemySpriteHeight, null);
+                if (!groundWalkLeftAnim.isStillActive()){
+                    groundWalkLeftAnim.start();
+                }
+                groundWalkLeftAnim.update();
             }
+
+
         }
 
         if (direction == 2){
+
+            if (isHit){
+                g2.drawImage(groundHitRightAnim.getImage(), enemyX + offsetX-(int)(50*displayScale), enemyY-(int)(50*displayScale), enemySpriteWidth, enemySpriteHeight, null);
+                if (!groundHitRightAnim.isStillActive()){
+                    groundHitRightAnim.start();
+                    isHit = false;
+                }
+                groundHitRightAnim.update();
+            }
+
+            else if (attack){
+                g2.drawImage(groundAttackRightAnim.getImage(), enemyX + offsetX-(int)(50*displayScale), enemyY-(int)(50*displayScale), enemySpriteWidth, enemySpriteHeight, null);
+                if (!groundAttackRightAnim.isStillActive()){
+                    groundAttackRightAnim.start();
+                }
+                groundAttackRightAnim.update();
+            }
             
-            if (!attack && !hit){
-                g2.drawImage(groundWalkRightAnim.getImage(), x + offsetX, y, XSIZE, YSIZE, null);
+            else {
+                g2.drawImage(groundWalkRightAnim.getImage(), enemyX + offsetX-(int)(50*displayScale), enemyY-(int)(50*displayScale), enemySpriteWidth, enemySpriteHeight, null);
+                if (!groundWalkRightAnim.isStillActive()){
+                    groundWalkRightAnim.start();
+                }
+                groundWalkRightAnim.update();
             }
 
-            else
-            if (attack){
-                g2.drawImage(groundAttackRightAnim.getImage(), x + offsetX, y, XSIZE, YSIZE, null);
-            }
-
-            else 
-            if (hit){
-                g2.drawImage(groundHitRightAnim.getImage(), x + offsetX, y, XSIZE, YSIZE, null);
-            }
         }
+
+/*         // Collision Box
+        g2.setColor(Color.RED);
+		g2.drawRect(enemyX+offsetX + enemyCollisionWidth/4, enemyY, enemyCollisionWidth/2, enemyCollisionHeight);
+
+        // Chase Trigger Range
+        g2.setColor(Color.BLUE);
+		g2.drawRect(enemyX-(int)(200*displayScale)+offsetX, enemyY-(int)(50*displayScale), enemyCollisionWidth+(int)(400*displayScale), enemyCollisionHeight);
+
+        // Attack Trigger Range
+        g2.setColor(Color.GREEN);
+        g2.drawRect(enemyX-(int)(25*displayScale)+offsetX, enemyY, enemyCollisionWidth+(int)(50*displayScale), enemyCollisionHeight);
+
+        // Enemy Attack Hitbox
+        g2.setColor(Color.ORANGE);
+        g2.drawRect(enemyX-(int)(45*displayScale)+offsetX, enemyY-(int)(20*displayScale), enemyAttackHitboxWidth, enemyAttackHitboxHeight);
+
+        g2.drawRect(enemyX+(int)(35*displayScale)+offsetX, enemyY-(int)(20*displayScale), enemyAttackHitboxWidth, enemyAttackHitboxHeight); */
+
 	}
 
 
-    public void start(int direction) {
-		
-        if (direction == 1){
-            
-            if (!attack && !hit){
-                groundWalkLeftAnim.start();
-            }
-
-            else
-            if (attack){
-                groundAttackLeftAnim.start();
-            }
-
-            else 
-            if (hit){
-                groundHitLeftAnim.start();
-            }
-        }
-
-        if (direction == 2){
-            
-            if (!attack && !hit){
-                groundWalkRightAnim.start();
-            }
-
-            else
-            if (attack){
-                groundAttackRightAnim.start();
-            }
-
-            else 
-            if (hit){
-                groundHitRightAnim.start();
-            }
-        }
-	}
-
-
-    public boolean collidesWithPlayer () {
+    public boolean collidesWithPlayer() {
 		Rectangle2D.Double myRect = getBoundingRectangle();
 		Rectangle2D.Double playerRect = player.getBoundingRectangle();
 		
@@ -238,83 +196,131 @@ public class GroundEnemy {
 	}
 
 
-    public Rectangle2D.Double getBoundingRectangle() {
-		return new Rectangle2D.Double (x, y, XSIZE, YSIZE);
+    public boolean gotHit() {
+		Rectangle2D.Double myRect = getBoundingRectangle();
+		Rectangle2D.Double playerRect = player.getAttackHitBox();
+		
+		if (myRect.intersects(playerRect) && player.isInHitFrame()) {
+            isHit = true;
+            if (direction == 1){
+                initialX = initialX + 100;
+            }
+            else if (direction == 2){
+                initialX = initialX - 100;
+            }
+			return true;
+		}
+		else {
+            return false;
+        }
 	}
 
 
-    public boolean isInRange () {
-		Rectangle2D.Double myRect = getRangeRectangle();
+    public boolean attackHitPlayer() {
+
+        if (attack) {
+            
+            if (groundAttackLeftAnim.isStillActive()) {
+                if (groundAttackLeftAnim.getCurrentFrameIndex() == 5 || groundAttackLeftAnim.getCurrentFrameIndex() == 9) {
+                    Rectangle2D.Double myRect = getLeftAttackHitRectangle();
+                    Rectangle2D.Double playerRect = player.getBoundingRectangle();
+                    return myRect.intersects(playerRect);
+                }
+            } 
+            
+            else if (groundAttackRightAnim.isStillActive()) {
+                if (groundAttackRightAnim.getCurrentFrameIndex() == 5 || groundAttackRightAnim.getCurrentFrameIndex() == 9) {
+                    Rectangle2D.Double myRect = getRightAttackHitRectangle();
+                    Rectangle2D.Double playerRect = player.getBoundingRectangle();
+                    return myRect.intersects(playerRect);
+                }
+            }
+        }
+
+        return false;
+    }
+
+
+    public boolean isInRange() {
+        Rectangle2D.Double myRect = getRangeRectangle();
+        Rectangle2D.Double playerRect = player.getBoundingRectangle();
+
+        return myRect.intersects(playerRect);
+    }
+
+
+    public boolean isInAttackRange () {
+		Rectangle2D.Double myRect = getAttackRangeRectangle();
 		Rectangle2D.Double playerRect = player.getBoundingRectangle();
 		
 		if (myRect.intersects(playerRect)) {
+            attack = true;
 			return true;
 		}
-		else
+		else {
+            attack = false;
 			return false;
+        }
 	}
 
 
+    public Rectangle2D.Double getBoundingRectangle() {
+		return new Rectangle2D.Double (enemyX+enemyCollisionWidth/4, enemyY, enemyCollisionWidth/2, enemyCollisionHeight);
+	}
+
     public Rectangle2D.Double getRangeRectangle() {
-		return new Rectangle2D.Double (x-200, y-50, XSIZE+400, YSIZE);
+		return new Rectangle2D.Double (enemyX-(int)(200*displayScale), enemyY-(int)(50*displayScale), enemyCollisionWidth+(int)(400*displayScale), enemyCollisionHeight);
+	}
+
+    public Rectangle2D.Double getAttackRangeRectangle() {
+		return new Rectangle2D.Double (enemyX-(int)(25*displayScale), enemyY, enemyCollisionWidth+(int)(50*displayScale), enemyCollisionHeight);
+	}
+
+    public Rectangle2D.Double getLeftAttackHitRectangle() {
+		return new Rectangle2D.Double (enemyX-(int)(45*displayScale), enemyY-(int)(20*displayScale), enemyAttackHitboxWidth, enemyAttackHitboxHeight);
+	}
+
+    public Rectangle2D.Double getRightAttackHitRectangle() {
+		return new Rectangle2D.Double (enemyX+(int)(35*displayScale), enemyY-(int)(20*displayScale), enemyAttackHitboxWidth, enemyAttackHitboxHeight);
 	}
 
 
 	public void update() {	
+
         
-        if (direction == 1){
-            
-            if (!attack && !hit){
-                if (!groundWalkLeftAnim.isStillActive()){
-                    return;
-                }
-                groundWalkLeftAnim.update();
-            }
-
-            else
-            if (attack){
-                if (!groundAttackLeftAnim.isStillActive()){
-                    return;
-                }
-                groundAttackLeftAnim.update();
-            }
-
-            else 
-            if (hit){
-                if (!groundHitLeftAnim.isStillActive()){
-                    return;
-                }
-                groundHitLeftAnim.update();
+        if (initialX < (int)(1280*displayScale)){
+            if (getX() > (int)(1000*displayScale)){
+                setX((int)(999*displayScale));
             }
         }
 
-        if (direction == 2){
-            
-            if (!attack && !hit){
-                if (!groundWalkRightAnim.isStillActive()){
-                    return;
-                }
-                groundWalkRightAnim.update();
-            }
-
-            else
-            if (attack){
-                if (!groundAttackRightAnim.isStillActive()){
-                    return;
-                }
-                groundAttackRightAnim.update();
-            }
-
-            else 
-            if (hit){
-                if (!groundHitRightAnim.isStillActive()){
-                    return;
-                }
-                groundHitRightAnim.update();
+        if (initialX > (int)(1280*displayScale) && initialX < (int)(2200*displayScale)){
+            if (getX() > (int)(2050*displayScale)){
+                setX((int)(2050*displayScale));
             }
         }
 
-        if (isInRange()){
+        
+        if (isHit) {
+            // Enemy is currently playing hit animation, do not move
+            dx = 0;
+            return;
+        }
+
+
+        if (groundAttackLeftAnim.isStillActive() || groundAttackRightAnim.isStillActive()) {
+            initialX = getX();
+            dx = 0;
+            return;
+        }
+
+        if (isInAttackRange()){
+            initialX = getX();
+            dx = 0;
+            return;
+        }
+
+        else if (isInRange()){
 
             initialX = getX();
 
@@ -335,12 +341,20 @@ public class GroundEnemy {
             }
         }
         else {
-            if (x < initialX-50 || x > initialX+50)
+
+            if (direction == 1){
+                dx = -4;
+            }
+            else {
+                dx = 4;
+            }
+
+            if (enemyX < initialX-50 || enemyX > initialX+50)
             
 			dx = dx * -1;
             changeDirection();
         }
-		x = x + dx;
+		enemyX = enemyX + dx;
 	}
 
     public void changeDirection(){
@@ -358,22 +372,22 @@ public class GroundEnemy {
 
 
     public int getX() {
-        return x;
+        return enemyX;
     }
 
 
     public void setX(int x) {
-        this.x = x;
+        enemyX = x;
     }
 
 
     public int getY() {
-        return y;
+        return enemyY;
     }
 
 
     public void setY(int y) {
-        this.y = y;
+        enemyY = y;
     }
 
 }
