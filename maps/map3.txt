@@ -4,14 +4,14 @@
 #   (Space) Empty tile
 #   A..Z    Tiles A through Z
   
-BF          o o o                o o o o o o o o o o o o o o o o o o o o o o o                   EB
-AD         QRRRRRT              QRRRRRRRRRRT   QRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRT                 CA
-AD                      o o o                                    EBBBBBBBBBBBBBF     QRRRRRRT    CA
-AD                  QRRRRRRRRT                                   CAAAAAAAAAAAAAD    o o o o o    CA
-AD                                          QST            o o   CAAAAAAAAAAAAAHF    o o o o     CA
-AD                    2   !        2                      QRRRT  CAAAAAAAAAAAAAAD   o o o o o    CA
-AD                    QRRRRRT                                    CAAAAAAAAAAAAAAHF               CA
-AD         QRT                      QRRRRRRRRRRRRRT      2       CMJJJJJJJJJJJJJJK  o o o o o    CA
-AD                            1                               QRTCD                  o o o o o   CA
-AD      1       EBBBBBBBBBBBBBBBF     o o o o o o              * CD                 o o o o o o  CA
-AHBBBBBBBBBBBBBBGAAAAAAAAAAAAAAAHBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBGHBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBGA
+F           o o o                o o o o o o o o o o o o o o o o o o o o o o o                   EB
+D          QRRRRRT              QRRRRRRRRRRT   QRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRRT                 CA
+D                       o o o                                    EBBBBBBBBBBBBBF   QRRRRRRRRT    CA
+D                   QRRRRRRRRT                                   CAAAAAAAAAAAAAD    o o o o o    CA
+D                                           QST            o o   CAAAAAAAAAAAAAHF    o o o o     CA
+D                     2   !        2                      QRRRT  CAAAAAAAAAAAAAAD   o o o o o    CA
+D                     QRRRRRT                                    CAAAAAAAAAAAAAAHF               CA
+D          QRT                      QRRRRRRRRRRRRRT      2       CMJJJJJJJJJJJJJJK  o o o o o    CA
+D                             1                               QRTCD                  o o o o o   CA
+D       1       EBBBBBBBBBBBBBBBF     o o o o o o              * CD                 o o o o o o  CA
+HBBBBBBBBBBBBBBBGAAAAAAAAAAAAAAAHBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBGHBBBBBBBBBBBBBBBBBBBBBBBBBBBBBBGA
